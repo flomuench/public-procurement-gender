@@ -43,7 +43,7 @@ format %9.0g id firmid
 ***********************************************************************
 * 	PART 2: 	Drop variables		  			
 ***********************************************************************
-drop tipo_empresa firm_founded
+drop tipo_empresa firm_founded firm_registration firm_registro
 
 ***********************************************************************
 * 	PART 3: 	Make all variables names lower case		  			
