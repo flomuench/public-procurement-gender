@@ -41,9 +41,9 @@ format %15.0fc `numvars'
 format %9.0g id firmid
 
 ***********************************************************************
-* 	PART 2: 	Drop all text windows from the survey		  			
+* 	PART 2: 	Drop variables		  			
 ***********************************************************************
-
+drop tipo_empresa firm_founded
 
 ***********************************************************************
 * 	PART 3: 	Make all variables names lower case		  			

@@ -9,13 +9,9 @@
 *	1)		Define non-response categories 			  				  
 * 	2) 		Encode categorical variables
 *	3)   	Replace string with numeric values						  
-*	4)  	Convert string to numerical variables	  				  
-*	5)  	Convert problematic values for open-ended questions		  
-*	6)  	Traduction reponses en arabe au francais				  
-*   7)      Rename and homogenize the observed values                  
-*	8)		Replace interview time with minutes instead of seconds	  
+*	4)  	Convert string to numerical variables	  				  	  
 *																	  															      
-*	Author:  	Florian Muench & Kais Jomaa							  
+*	Author:  	Florian Muench						  
 *	ID variable: 	process level id = id ; firm level id = firmid			  					  
 *	Requires: 	  								  
 *	Creates:  			                          
@@ -23,7 +19,7 @@
 ***********************************************************************
 * 	PART 1:  Define non-response categories  			
 ***********************************************************************
-use "${ml_intermediate}/ml_inter", clear
+use "${ppg_data}/SICOP_gender_new_workingversion", clear
 	
 
 
@@ -54,9 +50,8 @@ format `x' %25.0fc
 }
 */
 
-
 ***********************************************************************
 * 	Save the changes made to the data		  			
 ***********************************************************************
 
-save "ml_inter", replace
+*save "SICOP_gender_new_workingversion", replace

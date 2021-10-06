@@ -41,9 +41,18 @@ set scheme plotplain
 ***********************************************************************
 
 		* dynamic folder paths
-global ppg_gdrive = "C:/Users/`c(username)'/Google Drive/Public Procurement and Gender"
-global ppg_github = "C:/Users/`c(username)'/Documents/GitHub/public-procurement-gender"
-global ppg_backup = "C:/Users/`c(username)'/Documents/backup-public-procurement-gender"
+if c(os) == "Windows" {
+	global ppg_gdrive = "C:/Users/`c(username)'/Google Drive/Public Procurement and Gender"
+	global ppg_github = "C:/Users/`c(username)'/Documents/GitHub/public-procurement-gender"
+	global ppg_backup = "C:/Users/`c(username)'/Documents/backup-public-procurement-gender"
+}
+else if c(os) == "MacOSX" {
+	global ppg_gdrive = "Users/`c(username)'/Google Drive/Public Procurement and Gender"
+	global ppg_github = "Users/`c(username)'/Documents/GitHub/public-procurement-gender"
+	global ppg_backup = "Users/`c(username)'/Documents/backup-public-procurement-gender"
+}
+		
+
 
 		* dynamic folder globals
 *global ml_raw = "${ml_gdrive}/raw"
