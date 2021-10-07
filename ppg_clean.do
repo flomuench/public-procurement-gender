@@ -91,10 +91,9 @@ sort numero_procedimiento partida linea
 cd "$ppg_github"
 export excel ppg_codebook_variables in 1/1, firstrow(variables) replace
 export excel ppg_codebook_labels in 1/1, firstrow(varlabels) replace
-cd "$ppg_intermediate"
 
 ***********************************************************************
 * 	Save the changes made to the data		  			
 ***********************************************************************
-
+cd "$ppg_intermediate"
 save "sicop_replicable", replace
