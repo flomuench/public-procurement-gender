@@ -20,25 +20,12 @@
 *	Requires: 	  	SICOP_gender_new_workingversion.dta									  
 *	Creates:  		codebook-variables, codebook-labels	                                  
 ***********************************************************************
-* 	PART 1: 	Format string & numerical variables		  			
+* 	PART 1: 	Make all variables names lower case		  			
 ***********************************************************************
 use "${ppg_raw}/SICOP_gender_new_workingversion", clear
 
-ds, has(type string) 
-local strvars "`r(varlist)'"
-format %15s `strvars'
-format %25s numero_procedimiento
-
-
-*Lower all string observations of string variables*
-foreach x of local strvars {
-replace `x'= lower(`x')
-}
- 
-ds, has(type numeric) 
-local numvars "`r(varlist)'"
-format %15.0fc `numvars'
-format %9.0g id firmid
+rename TIPO tipo_s
+rename *, lower
 
 ***********************************************************************
 * 	PART 2: 	Drop variables		  			
@@ -46,10 +33,18 @@ format %9.0g id firmid
 drop tipo_empresa firm_founded firm_registration firm_registro
 
 ***********************************************************************
-* 	PART 3: 	Make all variables names lower case		  			
+* 	PART 3: 	Format string & numerical variables		  			
 ***********************************************************************
-rename TIPO tipo_s
-rename *, lower
+
+ds, has(type string) 
+local strvars "`r(varlist)'"
+format %15s `strvars'
+format %25s numero_procedimiento
+ 
+ds, has(type numeric) 
+local numvars "`r(varlist)'"
+format %15.0fc `numvars'
+format %9.0g id firmid
 
 ***********************************************************************
 * 	PART 4: 	Order the variables in the data set		  			

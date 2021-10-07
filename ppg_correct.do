@@ -17,11 +17,14 @@
 *	Creates:  			                          
 *																	  
 ***********************************************************************
-* 	PART 1:  Define non-response categories  			
+* 	PART 1:  Make all string obs lower case & remove trailing spaces  			
 ***********************************************************************
 use "${ppg_intermediate}/sicop_replicable", clear
 	
-
+ds, has(type string) 
+foreach x of local strvars {
+replace `x'= strtrim(lower(`x'))
+}
 
 ***********************************************************************
 * 	PART 2:  Encode categorical variables		  			

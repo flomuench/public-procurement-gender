@@ -30,6 +30,13 @@ cd "$ppg_figures"
 iebaltab age_registro-firm_size5, grpvar(female_firm) save(baltab_female_male)  ///
 			 vce(robust) replace pttest rowvarlabels balmiss(mean)
 
+			 /* to dos
+			 0: solve problem with firm international
+			 1: label firm size dummy
+			 2: format monto_crc (or divide by million?)
+			 3: label var / find out how the labels are done for collapse
+				* age_registro
+				* 
 
 ***********************************************************************
 * 	PART 3: 	sectoral distribution of firms	  			

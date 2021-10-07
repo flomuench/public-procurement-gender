@@ -58,7 +58,7 @@ global ppg_data = "${ppg_gdrive}/Data/Yami_Flo"
 global ppg_raw = "${ppg_data}/raw"
 global ppg_intermediate "${ppg_data}/intermediate"
 			* outputs
-global ppg_output = "${ppg_gdrive}/output"
+global ppg_output = "${ppg_gdrive}/Output"
 global ppg_figures = "${ppg_ouput}/figures"
 global ppg_regression_tables = "${ppg_ouput}/regression-tables"
 global ppg_descriptive_statistics = "${ppg_ouput}/descriptive-statistics"

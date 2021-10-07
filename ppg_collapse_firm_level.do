@@ -26,7 +26,7 @@ use "${ppg_intermediate}/sicop_replicable", clear
 egen fgid = group(firmid female_firm)
 		* collapse the data on firm-gender level
 collapse (firstnm) firm_size age_registro firm_international female_firm  ///
-		(count) times_part=one times_won=winner    ///
+		(sum) times_part=one times_won=winner    ///
 		(mean) avg_price=monto_crc avg_quantity=cantidad avg_points=calificacion avg_comp=n_c ///
 		, by(fgid)
 
