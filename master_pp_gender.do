@@ -10,7 +10,7 @@
 *				PART 3: Run midline do-files                          
 *																	  
 *																	  
-*	Author:  	Florian Muench						    
+*	Author:  	Yamile Vargas						    
 *	ID variable: 			  					  
 *	Requires: 	  										  
 *	Creates:  			                                  
