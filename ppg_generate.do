@@ -22,7 +22,7 @@
 ***********************************************************************
 * 	PART 1:  Gen treatment status variable		  			
 ***********************************************************************
-use "${ppg_data}/SICOP_gender_new_workingversion", clear
+use "${ppg_intermediate}/sicop_replicable", clear
 
 ***********************************************************************
 * 	PART 1:  generate age variables			

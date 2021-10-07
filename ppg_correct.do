@@ -19,7 +19,7 @@
 ***********************************************************************
 * 	PART 1:  Define non-response categories  			
 ***********************************************************************
-use "${ppg_data}/SICOP_gender_new_workingversion", clear
+use "${ppg_intermediate}/sicop_replicable", clear
 	
 
 

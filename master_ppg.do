@@ -104,6 +104,15 @@ if (1) do "${ppg_github}/ppg_generate.do"
 /* --------------------------------------------------------------------
 	PART 4.1.: firm level statistics & balance table
 	Requires: sicop_replicable
-	Creates:  sicop_replicable
+	Creates:  sicop_firm
 ----------------------------------------------------------------------*/		
+if (1) do "${ppg_github}/ppg_collapse_firm_level.do" 
+/* can be switched off to 0 after first run */
+
+/* --------------------------------------------------------------------
+	PART 4.2.: firm level statistics & balance table
+	Requires: sicop_firm
+	Creates:  sicop_firm
+----------------------------------------------------------------------*/
+
 if (1) do "${ppg_github}/ppg_firm_level_statistics.do"
