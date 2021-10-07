@@ -11,8 +11,8 @@
 *																	  
 *																	  
 *	Author:  	Florian Muench						    
-*	ID variable: 			  					  
-*	Requires: 	  										  
+*	ID variable: process-level id = id ; firm level id = firmid	  					  
+*	Requires: 	 SICOP_gender_new_workingversion 										  
 *	Creates:  			                                  
 ***********************************************************************
 * 	PART 1: 	Set standard settings & install packages			  
@@ -76,20 +76,37 @@ global ppg_descriptive_statistics = "${ppg_ouput}/descriptive-statistics"
 
 
 ***********************************************************************
-* 	PART 3: 	Run public procurement gender do-files			  	
+* 	PART 3: 	Run data cleaning & preparation do-files			  	
 ***********************************************************************
 /* --------------------------------------------------------------------
 	PART 3.1: clean
-	Requires: 
-	Creates: 
+	Requires: SICOP_gender_new_workingversion
+	Creates:  SICOP_gender_new_workingversion
 ----------------------------------------------------------------------*/		
 if (1) do "${ppg_github}/ppg_clean.do"
 
 
 /* --------------------------------------------------------------------
-	PART 3.1: analysis
-	Requires: 
-	Creates: 
+	PART 3.2: correct
+	Requires: SICOP_gender_new_workingversion
+	Creates:  SICOP_gender_new_workingversion
 ----------------------------------------------------------------------*/		
-*if (0) do "${ppg_github}/ppg_analysis.do"
+if (1) do "${ppg_github}/ppg_correct.do"
 
+/* --------------------------------------------------------------------
+	PART 3.3: generate
+	Requires: SICOP_gender_new_workingversion
+	Creates:  SICOP_gender_new_workingversion
+----------------------------------------------------------------------*/		
+if (1) do "${ppg_github}/ppg_generate.do"
+
+***********************************************************************
+* 	PART 4: 	Run descriptive statistics do files		  	
+***********************************************************************
+
+/* --------------------------------------------------------------------
+	PART 4.1.: firm level statistics & balance table
+	Requires: SICOP_gender_new_workingversion
+	Creates:  SICOP_gender_new_workingversion
+----------------------------------------------------------------------*/		
+if (1) do "${ppg_github}/ppg_firm_level_statistics.do"

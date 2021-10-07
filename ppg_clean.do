@@ -12,13 +12,13 @@
 *	4)  	Order the variables in the data set						  	  
 *	5)  	Rename the variables									  
 *	6)  	Label the variables										  
-* 7) 		Label variable values 								 
-* 8) 		Trim obversations										 
+* 	7) 		Label variable values 								 
+* 	8) 		Trim obversations										 
 *																	  													      
 *	Author:  	Florian Muench						    
-*	ID variable: 				  					  
+*	ID variable: 	process-level id = id ; firm level id = firmid			  					  
 *	Requires: 	  	SICOP_gender_new_workingversion.dta									  
-*	Creates:  ml_inter.dta			                                  
+*	Creates:  		codebook-variables, codebook-labels	                                  
 ***********************************************************************
 * 	PART 1: 	Format string & numerical variables		  			
 ***********************************************************************
