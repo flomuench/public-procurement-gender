@@ -17,7 +17,7 @@
 *	Creates:  			                          
 *																	  
 ***********************************************************************
-* 	PART 1:  create bar chart with bids per sector & firm gender  			
+* 	PART 1:  create bar chart of female male ratio per product group			
 ***********************************************************************
 use "${ppg_intermediate}/sicop_replicable", clear
 cd "$figures"
@@ -52,3 +52,7 @@ graph combine female_male_ratio_product_lower female_male_ratio_product_upper, /
 	subtitle("Below median (left) and above median (right)")
 		* export the graph
 graph export female_male_ratio_product.png, replace
+
+***********************************************************************
+* 	PART 2:  create bar chart of total females (left) and total males (right) per product group			
+***********************************************************************
