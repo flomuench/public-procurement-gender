@@ -22,6 +22,7 @@
 use "${ppg_intermediate}/sicop_replicable", clear
 	
 ds, has(type string) 
+local strvars "`r(varlist)'"
 foreach x of local strvars {
 replace `x'= strtrim(lower(`x'))
 }
@@ -29,12 +30,10 @@ replace `x'= strtrim(lower(`x'))
 ***********************************************************************
 * 	PART 2:  Encode categorical variables		  			
 ***********************************************************************
-/*	* enumerator name
-label def enq 1 "Faten" 2 "Lina" 3 "Azziz" 4 "Sarah"
-encode midline_enqueteur, gen(ml_enqueteur) label(enq) 
-drop midline_enqueteur
-rename ml_enqueteur midline_enqueteur
-*/
+		* firm size dummy
+lab def fsize 1 "micro" 2 "pequeña" 3 "mediana" 4 "grande" 5 "no clasificado"
+encode tipo_empresa, gen(firm_size) label(fsize)
+lab var firm_size "micro, small, medium, large or unclassified firm"
 
 
 ***********************************************************************

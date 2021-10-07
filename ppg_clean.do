@@ -30,7 +30,7 @@ rename *, lower
 ***********************************************************************
 * 	PART 2: 	Drop variables		  			
 ***********************************************************************
-drop tipo_empresa firm_founded firm_registration firm_registro
+drop firm_size firm_founded firm_registration firm_registro
 
 ***********************************************************************
 * 	PART 3: 	Format string & numerical variables		  			
@@ -43,7 +43,7 @@ format %25s numero_procedimiento
  
 ds, has(type numeric) 
 local numvars "`r(varlist)'"
-format %15.0fc `numvars'
+format %20.0fc `numvars'
 format %9.0g id firmid
 
 ***********************************************************************
@@ -58,15 +58,18 @@ format %9.0g id firmid
 ***********************************************************************
 * 	PART 6: 	Label the variables		  			
 ***********************************************************************
-
+lab var female_firm "firm represented by a women = 1"
 * label var q03 "continuer avec le questionnaire ou attendre PDG"
 
 ***********************************************************************
 * 	PART 7: 	Label variables values	  			
 ***********************************************************************
-
-*lab def mlran 1 "standards section" 2 "conformity section" 3 "metrology section"
-*lab val midline_rand mlran
+		* label values of representatives gender
+			* firm
+lab def gender 0 "male" 1 "female"
+lab val female_firm gender
+			* procurement officer
+	
 
 ***********************************************************************
 * 	PART 8: Removing trail and leading spaces in string values that will be converted into numeric values*	  			

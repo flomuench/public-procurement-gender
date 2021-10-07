@@ -51,7 +51,7 @@ label var age "firm age at time of bid publication"
 
 		* firm age at registration
 gen age_registro = year_registro - year_constitucion
-label var age_registro "firm age when registered for merlink"
+label var age_registro "firm age when registered"
 
 
 ***********************************************************************
@@ -59,13 +59,18 @@ label var age_registro "firm age when registered for merlink"
 ***********************************************************************
 tab firm_location, gen(firm_location)
 
-
-
 ***********************************************************************
 * 	PART 3:  generate country origin dummy
 ***********************************************************************
 gen firm_international = (pais_domicilio != "crc"), a(pais_domicilio)
 label var firm_international "international firm (= not from CR)"
+label def international 0 "Costa Rican" 1 "International"
+lab val firm_international international
+
+***********************************************************************
+* 	PART 4:  generate firm size dummy
+***********************************************************************
+tab firm_size, gen(firm_size)
 
 ***********************************************************************
 * 	Save the changes made to the data		  			

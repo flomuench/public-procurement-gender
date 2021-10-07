@@ -59,9 +59,9 @@ global ppg_raw = "${ppg_data}/raw"
 global ppg_intermediate "${ppg_data}/intermediate"
 			* outputs
 global ppg_output = "${ppg_gdrive}/Output"
-global ppg_figures = "${ppg_ouput}/figures"
-global ppg_regression_tables = "${ppg_ouput}/regression-tables"
-global ppg_descriptive_statistics = "${ppg_ouput}/descriptive-statistics"
+global ppg_figures = "${ppg_output}/figures"
+global ppg_regression_tables = "${ppg_output}/regression-tables"
+global ppg_descriptive_statistics = "${ppg_output}/descriptive-statistics"
 	
 		* global for numerical variables*
 *global numvar ml_prix q393 q392 q391
@@ -115,4 +115,4 @@ if (1) do "${ppg_github}/ppg_collapse_firm_level.do"
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/
 
-if (1) do "${ppg_github}/ppg_firm_level_statistics.do"
+if (0) do "${ppg_github}/ppg_firm_level_statistics.do"
