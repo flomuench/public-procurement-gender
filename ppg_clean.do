@@ -22,7 +22,7 @@
 ***********************************************************************
 * 	PART 1: 	Format string & numerical variables		  			
 ***********************************************************************
-use "${ppg_data}/SICOP_gender_new_workingversion", clear
+use "${ppg_raw}/SICOP_gender_new_workingversion", clear
 
 ds, has(type string) 
 local strvars "`r(varlist)'"
@@ -93,10 +93,10 @@ sort numero_procedimiento partida linea
 cd "$ppg_github"
 export excel ppg_codebook_variables in 1/1, firstrow(variables) replace
 export excel ppg_codebook_labels in 1/1, firstrow(varlabels) replace
-
+cd "$ppg_intermediate"
 
 ***********************************************************************
 * 	Save the changes made to the data		  			
 ***********************************************************************
 
-*save "SICOP_gender_new_workingversion", replace
+save "sicop_replicable", replace

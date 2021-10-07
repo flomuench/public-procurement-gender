@@ -54,4 +54,4 @@ format `x' %25.0fc
 * 	Save the changes made to the data		  			
 ***********************************************************************
 
-*save "SICOP_gender_new_workingversion", replace
+save "sicop_replicable", replace

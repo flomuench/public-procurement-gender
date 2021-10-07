@@ -71,4 +71,4 @@ label var firm_international "international firm (= not from CR)"
 * 	Save the changes made to the data		  			
 ***********************************************************************
 
-*save "SICOP_gender_new_workingversion", replace
+save "sicop_replicable", replace
