@@ -76,6 +76,12 @@ label var avg_comp "mean competitors in bid"
 	* average number of competitors = done 
 	* average points for offer = done
 	
+	
+***********************************************************************
+* 	PART 4: 	create win/participated ratio	  			
+***********************************************************************	
+gen success_ratio = times_won/times_part
+lab var success_ratio "times bid won in times participated" 
 ***********************************************************************
 * 	PART END: 	Save firm level data set		  			
 ***********************************************************************
