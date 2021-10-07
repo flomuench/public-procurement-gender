@@ -22,12 +22,9 @@ use "${ppg_intermediate}/sicop_firm", clear
 ***********************************************************************
 * 	PART 2: 	generate balance table between female and male firms	  			
 ***********************************************************************
-order firm_size, last
-tab firm_size, gen(firm_size)
-
 order female_firm, last
 cd "$ppg_figures"
-iebaltab firm_size-avg_comp, grpvar(female_firm) save(baltab_female_male) replace ///
+iebaltab age_registro-avg_comp, grpvar(female_firm) save(baltab_female_male) replace ///
 			 vce(robust) pttest rowvarlabels balmiss(mean) onerow stdev notecombine ///
 			 format(%12.2fc)
 
