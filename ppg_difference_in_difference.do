@@ -41,5 +41,8 @@ bysort firmid : gen occurrence = _n, a(firmid)
 	* try to identify firms that changed the representative
 gen repchange1 = . 
 bysort firmid: replace repchange = 1 if persona_encargada_proveedor[_n] != persona_encargada_proveedor[_n-1]
-egen repchange = min(repchange1==1)
+bysort firmid: replace repchange = 0 if persona_encargada_proveedor[_n] == persona_encargada_proveedor[_n-1]
+
+egen repchange2 = sum(repchange1), by(firmid)
+by firmid: gen repchange = (repchange2 > 1)
 order repchange*, a(ceochange)
