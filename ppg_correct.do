@@ -41,6 +41,8 @@ lab var firm_size "micro, small, medium, large or unclassified firm"
 ***********************************************************************
 	* q391: ventes en export 
 *replace q391_corrige = "254000000" if id == "f247"
+replace female_firm = 0 if firmid == 7 & persona_encargada_proveedor == "luis gonzalez mora"
+replace genderfo = 0 if firmid == 7 & persona_encargada_proveedor == "luis gonzalez mora"
 
 
 ***********************************************************************
