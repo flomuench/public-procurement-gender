@@ -31,7 +31,8 @@ rename *, lower
 * 	PART 2: 	Drop variables		  			
 ***********************************************************************
 drop firm_size firm_founded firm_registration firm_registro date_ca date_pu ///
-	date_contract_published date_contract_allocated
+	date_contract_published date_contract_allocated firm_age_registro ///
+	firm_appearance
 
 ***********************************************************************
 * 	PART 3: 	Format string & numerical variables		  			
@@ -41,16 +42,18 @@ ds, has(type string)
 local strvars "`r(varlist)'"
 format %15s `strvars'
 format %25s numero_procedimiento
+format %5s partida
  
 ds, has(type numeric) 
 local numvars "`r(varlist)'"
 format %20.0fc `numvars'
 format %9.0g id firmid year
+format %5.0g linea genderfo ceochange ceof2m ceom2f firm_appearance
 
 ***********************************************************************
 * 	PART 4: 	Order the variables in the data set		  			
 ***********************************************************************
-
+ 
 ***********************************************************************
 * 	PART 5: 	Rename the variables		  			
 ***********************************************************************
