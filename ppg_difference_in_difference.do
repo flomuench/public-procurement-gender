@@ -123,28 +123,36 @@ codebook firmid if gender_change_multiple == 1
 ********* PART 2.3.: identify firms that changed rep but only among women (men)
 gen f2m = .
 	* idea: if single change & first observation is female it must change f2m
-replace f2m = 1 if gender_change_single == 1 & female_firm[1] == 1
+bysort firmid (firm_occurence): replace f2m = 1 if gender_change_single == 1 & female_firm[1] == 1
 	* define the counterfactual
 		* option 1 (selected option): compare to female to female change
 		* option 2: compare to multiple changes
 replace f2m = 0 if f2f == 1
 lab var f2m "f2m vs. f2f for single gender change"
 codebook firmid if f2m == 1
-			* 197 firms, 17, 881 bids
+			* 77 firms, 10,461 bids
 
 gen m2f = .
 	* idea: if single change & first observation is female it must change f2m
-replace m2f = 1 if gender_change_single == 1 & female_firm[0] == 1
+bysort firmid (firm_occurence): replace m2f = 1 if gender_change_single == 1 & female_firm[1] == 0
 	* define the counterfactual
 		* option 1 (selected option): compare to male to male change
 		* option 2: compare to multiple changes
 replace m2f = 0 if m2m == 1
 lab var m2f "m2f vs. m2m for single gender change"
-codebook firmid if f2m == 1
-			* 197 firms, 17, 881 bids
+codebook firmid if m2f == 1
+			* 91 firms, 6,673 bids
 
-
-* event --> first time change occurred t = 1
-	* event before change --> t = 0
-	* 
-	
+***********************************************************************
+* 	PART 3:  Create post variable			
+***********************************************************************	
+* idea: exploit the new m2f & f2m variables
+	* for m2f firm, post = 1 if female_firm == 1
+	* for f2m firms, post = 1 if female_firm == 0
+gen post = .
+	*
+replace post = 1 if m2f == 1 & female_firm == 1
+replace post = 0 if m2f == 1 & female_firm == 0
+	*
+replace post = 1 if f2m == 1 & female_firm == 0
+replace post = 0 if f2m == 1 & female_firm == 1
