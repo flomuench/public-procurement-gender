@@ -130,6 +130,7 @@ bysort firmid (firm_occurence): replace f2m = 1 if gender_change_single == 1 & f
 replace f2m = 0 if f2f == 1
 lab var f2m "f2m vs. f2f for single gender change"
 codebook firmid if f2m == 1
+order f2m, a(persona_encargada_proveedor)
 			* 77 firms, 10,461 bids
 
 gen m2f = .
@@ -141,12 +142,15 @@ bysort firmid (firm_occurence): replace m2f = 1 if gender_change_single == 1 & f
 replace m2f = 0 if m2m == 1
 lab var m2f "m2f vs. m2m for single gender change"
 codebook firmid if m2f == 1
+order m2f, a(f2m)
+
 			* 91 firms, 6,673 bids
 
 ***********************************************************************
 * 	PART 3:  Create post variable			
 ***********************************************************************	
-* idea: exploit the new m2f & f2m variables
+	* treatment group
+* idea: exploit the new m2f & f2m variables to create post variable for the treatment group
 	* for m2f firm, post = 1 if female_firm == 1
 	* for f2m firms, post = 1 if female_firm == 0
 gen post = .
@@ -156,3 +160,43 @@ replace post = 0 if m2f == 1 & female_firm == 0
 	*
 replace post = 1 if f2m == 1 & female_firm == 0
 replace post = 0 if f2m == 1 & female_firm == 1
+order post, a(m2f)
+format %5.0g post
+
+	* control group
+* idea: create an artificial post variable after half the occurrence
+
+***********************************************************************
+* 	PART 4:  Create a running variable	
+***********************************************************************	
+* idea: firm_occurence but centred at 0 (or -1) period before change
+	* 1: get the value one period before the change occurs:
+		* idea: 
+			* m2f --> max occurence for female_firm == 0
+			* f2m --> max occurence for female_firm == 1
+tempvar m2f_value_before1 m2f_value_before2 f2m_value_before1 f2m_value_before2
+
+egen `m2f_value_before1' = max(firm_occurence) if female_firm==0 & m2f == 1, by(firmid)
+egen `m2f_value_before2' = max(`m2f_value_before1'), by(firmid)
+*order m2f_value_before', a(firm_occurence)
+
+egen `f2m_value_before1' = max(firm_occurence) if female_firm==1 & f2m == 1, by(firmid)
+egen `f2m_value_before2' = max(`f2m_value_before1'), by(firmid)
+
+gen value_before = `m2f_value_before2' + `f2m_value_before2'
+order value_before, a(firm_occurence)
+	
+	* 2: generate time_to_treat var:
+		* idea:
+			* post = 1: replace time_to_treat = firm_occurrence - value_before
+			* post = 0: replace time_to_treat = value_before - firm_occurence
+gen time_to_treat = .
+	bysort firmid (firm_occurence): replace time_to_treat = firm_occurence - value_before
+
+	replace time_to_treat = firm_occurence - value_before if post == 1
+	replace time_to_treat = value_before - firm_occurence if post == 0
+order time_to_treat, a(firm_occurence)
+format %5.0g value_before time_to_treat
+
+* idea: treat firm_occurrence as days
+gen fake_year = 
