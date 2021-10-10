@@ -105,32 +105,17 @@ gen f2m = .
 	* idea: if single change & first observation is female it must change f2m
 replace f2m = 1 if gender_change_single == 1 & female_firm[1] == 1
 	* define the counterfactual
-		* option 1:
-		* option 2:
+		* option 1 (selected option): compare to female to female change
+		* option 2: compare to multiple changes
 replace f2m = 0 if f2f == 1
 
- identify firm that changed their representatives gender
-* option 1: use ceof2m ceom2f
-gen repgenderchange = .
-replace repgenderchange = 0 if repchange == 0
-replace repgenderchange = 0 if repchange == 1 & ceom2f == 0 & ceof2m == 0
-replace repgenderchange = 1 if repchange == 1 & ceom2f == 1 | ceof2m == 1
-tab repgenderchange, missing
-
-drop repchange1 repchange2
-
-gen treated = .
-replace treated = 1 if repgenderchange == 1 
-replace treated = 0 if 
+gen m2f = .
+	* idea: if single change & first observation is female it must change f2m
+replace m2f = 1 if gender_change_single == 1 & female_firm[0] == 1
+	* define the counterfactual
+		* option 1 (selected option): compare to male to male change
+		* option 2: compare to multiple changes
+replace f2m = 0 if m2m == 1
 
 
-gen treated_female = .
-replace treated_male = 1 if ceom2f == 1 & repgenderchange == 1 & repchange == 1
-replace treated_male = 0 if ceom2f == 0 & repgenderchange == 0 & repchange == 1
-replace treated_male = . if ceof2m == 1 /* take out those that change in opposite direction to avoid cancelling out of effect */
-
-gen treated_male = . 
-replace treated_male = 1 if ceof2m == 1 & repgenderchange == 1 & repchange == 1
-replace treated_male = 0 if ceof2m == 0 & repgenderchange == 0 & repchange == 1
-replace treated_male = . if ceom2f == 1 /* take out those that change in opposite direction to avoid cancelling out of effect */
 	
