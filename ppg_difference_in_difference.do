@@ -21,11 +21,7 @@
 ***********************************************************************
 use "${ppg_intermediate}/sicop_replicable", clear
 
-sort firmid firm_appearance
-browse id numero_procedimiento year fecha_publicacion fecha_adjudicacion partida linea nombre_proveedor firmid 
-
-sort firmid date_adjudicacion numero_procedimiento partida linea
-by firmid: gen firm_occurence = _n, a(firmid)
+* browse id numero_procedimiento year fecha_publicacion fecha_adjudicacion partida linea nombre_proveedor firmid 
 
 	* create State recognized time variables to create a running event variable
 local fechas "publicacion adjudicacion registro"
@@ -35,30 +31,31 @@ format date_`x' %tc
 drop fecha_`x'
 }
 
-	* generate firm occurence variable
-order date_adjudicacion, a(linea)
 
-sort firmid date_adjudicacion
-bysort firmid : gen occurrence = _n, a(firmid)
+	* idea/problem: remove same process-firmid-winner combinations because one process (with same procurement officer)
+			* can have manifold subprocesses, which would all be perceived as different processes before-after change in gender of rep.
+				* can different firms win subprocesses in one big process? 
+					* this process illustrates that different companies can win different subprocesses (partidas, lineas) within one procurement process
+					* this implies also same firm can be a winner and looser in the same process, hence per firm max. 2 observations per process
+*browse if numero_procedimiento == "2011cd-000001-0001200001"
 
-	* 
-/* at later stage, time_to_treat variable suggests that some firms have 
-				* problem: time_to_treat varies by firm
-					* solution: determine event window of interest
-						* problem: for firms that bidded for big processes, small window will refer
-							* to the same processes */
-		* can different firms win subprocesses in one big process? 
-duplicates tag numero_procedimiento firmid winner , gen(process_same_firm_outcome)
-		* the below test whether always same person allocating contract, which is true (also 107,627 process-firm-officer-outcome combinations)
-duplicates tag numero_procedimiento firmid winner nombre_comprador, gen(process_same_firm_po_outcome)
-		* show processes with 0 & 1 (0,1 & 2) duplicate process-firm-outcome combinations
-browse if process_same_firm_outcome <= 1
-browse if process_same_firm_outcome <= 1
-		* this process illustrates that different companies can win different subprocesses (partidas, lineas) within one procurement process
-browse if numero_procedimiento == "2011cd-000001-0001200001"
+		* identify same-process-firmid-winner combinations
+		* remove same process-firmid-winner combinations 
+sort numero_procedimiento firmid winner
+quietly by numero_procedimiento firmid winner:  gen dup = cond(_N==1,0,_n)
+order dup, b(post)
+			* eyeballing the data
+* browse if numero_procedimiento == "2011cd-000001-0001200001"
+* browse if numero_procedimiento == "2011cd-000001-0001200001" & dup <= 1
+			* last line suggests that dup = 0 & dup = 1 select per firm one loosing and one winning bid
+			* also checked and inclusion of procurement officer firm name did not change the number of observations in dup 0 and 1
 
-browse if numero_procedimiento == "2011cd-000001-0001200001" & process_same_firm_outcome == 0
-	
+drop if dup > 1 & dup < .
+	* 580,878 of 774, 391 obs dropped...
+
+		* generate firm occurence variable
+sort firmid date_adjudicacion numero_procedimiento partida linea
+by firmid: gen firm_occurence = _n, a(firmid)
 	
 ***********************************************************************
 * 	PART 2:  identify the different treatment groups 			
@@ -227,13 +224,51 @@ order time_to_treat, a(firm_occurence)
 format %5.0g time_to_treat
 
 	* visualise how many lags and leaps before treatment (change in reps gender)
-cd "$figures"
+cd "$ppg_figures"
 histogram time_to_treat, title("{bf:Lags and leaps around gender change of firm representative}") ///
-	subtitle("{it:Bid-level rather than process-level}") ///
+	subtitle("{it:Process-level}") ///
 	xtitle("Number of bids") xlabel(#10) ///
-	note("Bin width = 260", size(small))
-graph export lags_leaps_around_gender_change_bid_level.png
+	note("Bin width = ", size(small))
+	
+histogram time_to_treat if time_to_treat <= 50 & time_to_treat > = - 50, frequency ///
+	width(5) ///
+	title("{bf:Lags and leaps around gender change of firm representative}") ///
+	subtitle("{it:Process-level}") ///
+	xtitle("Time to treatment") xlabel(#10) ///
+	note("Bin width = 5", size(small)) ///
+	ylabel(0(500)4000) ytitle("Total number of procurement processes")
+graph export lags_leaps_around_gender_change_process_level.png, replace
 
+histogram time_to_treat if time_to_treat <= 50 & time_to_treat > = - 50 & f2m!= ., frequency ///
+	width(1) ///
+	title("{bf:Lags and leaps around gender change of firm representative}") ///
+	subtitle("{it:Process-level}") ///
+	xtitle("Time to treatment") xlabel(#10) ///
+	note("Bin width = 1. N = 8165 processes.", size(small)) ///
+	ylabel(0(10)200) ytitle("Total number of procurement processes")
+graph export lags_leaps_around_gender_change_process_level_sample.png, replace
+	
+twoway  (histogram time_to_treat if time_to_treat <= 50 & time_to_treat > = - 50 & f2m == 1, width(1) frequency color(maroon%30)) ///
+		(histogram time_to_treat if time_to_treat <= 50 & time_to_treat > = - 50 & f2m == 0, width(1) frequency color(navy%30)), ///
+			legend(order(1 "Female to male" 2 "Female to female")) ///
+			title("{bf:Lags and leaps around gender change of firm representative}") ///
+			subtitle("{it:Process-level by treatment and control group}") ///
+			xtitle("Time to treatment") xlabel(#10) ///
+			note("Bin width = 1. N = 8165 processes out of which 2,385 female-to-male & female-to-female 5,780.", size(vsmall)) ///
+			ylabel(0(10)100) ytitle("Total number of procurement processes")
+graph export lags_leaps_around_gender_change_process_level_f2m.png, replace
+	
+twoway  (histogram time_to_treat if time_to_treat <= 50 & time_to_treat > = - 50 & m2f == 1, width(1) frequency color(maroon%30)) ///
+		(histogram time_to_treat if time_to_treat <= 50 & time_to_treat > = - 50 & m2f == 0, width(1) frequency color(navy%30)), ///
+			legend(order(1 "Male to female" 2 "Male to male")) ///
+			title("{bf:Lags and leaps around gender change of firm representative}") ///
+			subtitle("{it:Process-level by treatment and control group}") ///
+			xtitle("Time to treatment") xlabel(#10) ///
+			note("Bin width = 1. N = 39,876 processes out of which 1,761 male-to-female & 38,115 male-to-male.", size(vsmall)) ///
+			ylabel(0(50)1000) ytitle("Total number of procurement processes")
+graph export lags_leaps_around_gender_change_process_level_m2f.png, replace
+	
+	
 * to browse firms in treatment and control group: browse if gender_change_single == 1
 
 ***********************************************************************
@@ -244,20 +279,16 @@ cd "$regression-tables"
 	* set panel data
 	
 	* estimate coefficients & se
-		* 
 		* problem: stata does not allow negative factors
 			* solution: shift time to treat variable by a certain factor to make it all positive
+				* shift factor should correspond to event window width, which needs to be determined arbitrarily
+*egen shift_factor = min(time_to_treat) if gender_change_single == 1, by(firmid)
+gen nttt50 = time_to_treat + 50
+lab var nttt50 "normalised time to treatment, +/- 50 window"
+gen nttt10 = time_to_treat + 10
+lab var nttt50 "normalised time to treatment, +/- 10 window"
 
-
-
-gen tag_same_process_diff_winner = .
-bysort firmid (firm_occurence): replace tag_same_process_diff_winner = 1 if numero_procedimiento[_n] == numero_procedimiento[_n-1] & process_same_firm_outcome == 0
-							
-egen shift_factor = min(firm_occurence) if gender_change_single == 1, by(firmid)
-gen shifted_ttt = time_to_treat + r(min)
-
-
-logit winner i.f2m##ib.post , vce(robust)
+logit winner i.f2m##ib50.nttt50 if nttt50 <= 100 & nttt50 > 0, vce(robust)
 
 preserve
 keep if time_to_treat <= 5 & time_to_treat >= -5
