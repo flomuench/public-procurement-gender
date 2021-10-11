@@ -103,6 +103,7 @@ codebook firmid if m2m == 1
 	* 618 firms, 171,277 bids
 
 ********* PART 2.2.: identify firms that changed the gender of representative several times
+
 		* create a var that counts / = 1 each time gender of rep changes
 tempvar gender_change_count
 gen `gender_change_count' = . 
@@ -163,40 +164,81 @@ replace post = 0 if f2m == 1 & female_firm == 1
 order post, a(m2f)
 format %5.0g post
 
-	* control group
-* idea: create an artificial post variable after half the occurrence
+***********************************************************************
+* 	PART 3:  Create a placebo treatment for the firms that did never change CEO			
+***********************************************************************
+* idea: see _difference-in-difference line 28 - 46
+
 
 ***********************************************************************
-* 	PART 4:  Create a running variable	
+* 	PART 4:  Create a time to treat variable for control group	
+***********************************************************************
+* f2f, m2m identify firms with one single same gender change
+	* task: need to identify switching point
+	* idea: identify max occurence before switch
+order f2f m2m, a(m2f)
+tempvar treat_value_before1 control_value_before1 treat_value_before2 control_value_before2 value_before
+sort firmid firm_occurence
+egen `control_value_before1' = max(firm_occurence) if persona_encargada_proveedor[_n] == persona_encargada_proveedor[_n-1] & f2f == 1 | m2m == 1, by(firmid)
+egen `control_value_before2'  = max(`control_value_before1'), by(firmid)
+
+***********************************************************************
+* 	PART 5:  Create a time to treat variable for treatment group
 ***********************************************************************	
 * idea: firm_occurence but centred at 0 (or -1) period before change
 	* 1: get the value one period before the change occurs:
 		* idea: 
 			* m2f --> max occurence for female_firm == 0
 			* f2m --> max occurence for female_firm == 1
-tempvar m2f_value_before1 m2f_value_before2 f2m_value_before1 f2m_value_before2
+egen `treat_value_before1' = max(firm_occurence) if female_firm==0 & m2f == 1 | female_firm == 1 & f2m == 1, by(firmid)
+egen `treat_value_before2' = max(`treat_value_before1'), by(firmid)
 
-egen `m2f_value_before1' = max(firm_occurence) if female_firm==0 & m2f == 1, by(firmid)
-egen `m2f_value_before2' = max(`m2f_value_before1'), by(firmid)
-*order m2f_value_before', a(firm_occurence)
 
-egen `f2m_value_before1' = max(firm_occurence) if female_firm==1 & f2m == 1, by(firmid)
-egen `f2m_value_before2' = max(`f2m_value_before1'), by(firmid)
+gen `value_before' = .
+replace `value_before' = `control_value_before2' if m2m == 1 | f2f == 1
+replace `value_before' = `treat_value_before2' if f2m == 1 | m2f == 1
 
-gen value_before = `m2f_value_before2' + `f2m_value_before2'
-order value_before, a(firm_occurence)
-	
-	* 2: generate time_to_treat var:
+	* 2: replace values of time_to_treat var:
 		* idea:
 			* post = 1: replace time_to_treat = firm_occurrence - value_before
 			* post = 0: replace time_to_treat = value_before - firm_occurence
+	
+	* generate time to treat variable
 gen time_to_treat = .
-	bysort firmid (firm_occurence): replace time_to_treat = firm_occurence - value_before
-
-	replace time_to_treat = firm_occurence - value_before if post == 1
-	replace time_to_treat = value_before - firm_occurence if post == 0
+bysort firmid (firm_occurence): replace time_to_treat = firm_occurence - `value_before'
 order time_to_treat, a(firm_occurence)
-format %5.0g value_before time_to_treat
+format %5.0g time_to_treat
 
-* idea: treat firm_occurrence as days
-gen fake_year = 
+* to browse firms in treatment and control group: browse if gender_change_single == 1
+
+***********************************************************************
+* 	PART 6:  Create scatterplot of coefficient	
+***********************************************************************	
+	* set panel data
+	
+	* estimate coefficients & se
+		* 
+		* problem: stata does not allow negative factors
+			* solution: shift time to treat variable by a certain factor to make it all positive
+				* problem: time_to_treat varies by firm
+					* solution: determine event window of interest
+						* problem: for firms that bidded for big processes, small window will refer
+							* to the same processes
+* can different firms win subprocesses in one big process? 
+duplicates tag numero_procedimiento firmid winner, gen(process_same_firm_outcome)
+
+gen tag_same_process_diff_winner = .
+bysort firmid (firm_occurence): replace tag_same_process_diff_winner = 1 if numero_procedimiento[_n] == numero_procedimiento[_n-1] & process_same_firm_outcome == 0
+							
+egen shift_factor = min(firm_occurence) if gender_change_single == 1, by(firmid)
+gen shifted_ttt = time_to_treat + r(min)
+
+
+logit winner i.f2m##ib.post , vce(robust)
+
+preserve
+keep if time_to_treat <= 5 & time_to_treat >= -5
+tw ///
+	(kdensity winner if m2f == 1, lp(dash) lc(maroon) bwidth(.5)) ///
+	(kdensity winner if f2m == 1, lp(dash) lc(navy) bwidth(.5)) 
+restore
