@@ -48,7 +48,7 @@ ds, has(type numeric)
 local numvars "`r(varlist)'"
 format %20.0fc `numvars'
 format %9.0g id firmid year female_firm
-format %5.0g linea genderfo ceochange ceof2m ceom2f firm_appearance winner
+format %5.0g linea genderfo ceochange ceof2m ceom2f firm_appearance winner cantidad
 
 ***********************************************************************
 * 	PART 4: 	Order the variables in the data set		  			

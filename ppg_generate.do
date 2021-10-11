@@ -20,9 +20,15 @@
 *	Creates:  			   						  
 *																	  
 ***********************************************************************
-* 	PART 1:  Gen treatment status variable		  			
+* 	PART START:  Gen treatment status variable		  			
 ***********************************************************************
 use "${ppg_intermediate}/sicop_replicable", clear
+
+***********************************************************************
+* 	PART 0:  create a process id			
+***********************************************************************
+egen process_id = group(numero_procedimient partida linea)
+order process_id, a(linea)
 
 ***********************************************************************
 * 	PART 1:  generate age variables			
@@ -35,6 +41,7 @@ foreach var of local dates {
 	destring year_`var', replace
 	replace year_`var' = year_`var' + 2000
 }
+
 	* do the same for the year when the firm was founded (different format thus not in loop)
 gen year_constitucion = substr(fecha_constitucion, -4, .), a(fecha_constitucion)
 destring year_constitucion, replace
@@ -71,52 +78,6 @@ lab val firm_international international
 * 	PART 4:  generate firm size dummy
 ***********************************************************************
 tab firm_size, gen(firm_size)
-
-***********************************************************************
-* 	PART 5:  generate male firm application dummy 
-***********************************************************************
-gen gendermo = .
-replace gendermo = 0 if genderfo == 1
-replace gendermo = 1 if genderfo == 0
-
-***********************************************************************
-* 	PART 6:  generate male firm application dummy 
-***********************************************************************
-gen gendermo = .
-replace gendermo = 0 if genderfo == 1
-replace gendermo = 1 if genderfo == 0
-
-***********************************************************************
-* 	PART 7:  generate male firm win dummy 
-***********************************************************************
-gen male_win = .
-replace male_win = 0 if female_win == 1
-replace male_win = 1 if female_win == 0
-
-***********************************************************************
-* 	PART 8:  generate precio_usd, dollar version from variable precio_crc 
-***********************************************************************
-
-cd "/Users/yamivargas/Google Drive/Public Procurement and Gender/Data/Yami_Flo/"
-import delimited Exchangerate.csv, clear
-
-ren costaricacri pesos
-ren time ano
-
-keep ano pesos
-drop if mi(ano)
-
-save exchangerate, replace
-
-use "SICOP_gender_new_workingversion.dta", clear
-
-destring ano, replace
-
-cap drop _merge
-
-merge m:1 ano using exchangerate
-
-gen PRECIO_usd = PRECIO_CRC / pesos
 
 ***********************************************************************
 * 	Save the changes made to the data		  			

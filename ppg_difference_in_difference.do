@@ -56,6 +56,7 @@ drop if dup > 1 & dup < .
 		* generate firm occurence variable
 sort firmid date_adjudicacion numero_procedimiento partida linea
 by firmid: gen firm_occurence = _n, a(firmid)
+format %5.0g firmid firm_occurence
 	
 ***********************************************************************
 * 	PART 2:  identify the different treatment groups 			
@@ -209,15 +210,36 @@ format %5.0g post
 ***********************************************************************
 * 	PART 4:  Create a time to treat variable for control group	
 ***********************************************************************
-* f2f, m2m identify firms with one single same gender change
-	* task: need to identify switching point
-	* idea: identify max occurence before switch
+* problem:
+	* Stata does not seem to get along well with the strings saved in persona_encargada_proveedor
+		* (1) data actually shows there are several changes in representative although reps variable suggests there were only 2 representatives
+		* (2) code using persona_...[_n] != or == [n_1] does not work well as Stata struggles to make a difference
+	* idea/approach: try to create a numeric variable for each distinct value of a firm-repname pair
+		* objective: identify the process (its value/value of the process before) to create time_to_treat variable
 order f2f m2m, a(m2f)
-tempvar treat_value_before1 control_value_before1 treat_value_before2 control_value_before2 value_before
+tempvar treat_value_before1 control_value_before1 treat_value_before2 control_value_before2 value_before tag value
+			
+			* use egen tag() to create a dummy that = 1 for the first occurence of each distinct value of persona_encagarda_proveedor for each firm
 sort firmid firm_occurence
-egen control_value_before1 = max(firm_occurence) if persona_encargada_proveedor[_n] == persona_encargada_proveedor[_n-1] & gender_change_single == 1 & f2f == 1 | m2m == 1, by(firmid)
+egen `tag' = tag(firmid persona_encargada_proveedor)
+order `tag', a(persona_encargada_proveedor)
+			* next, try to get the value_before first occurence of second firm rep
+egen `value' = max(firm_occurence) if `tag' == 1, by(firmid)
+*order value, a(tag)
+			* -1 to get the value_before the last (max) value 
+gen `control_value_before1' = `value' - 1
+*order control_value_before1, a(value)
+			* create a tempvar that has value_before as value for all obs of firmid
+egen `control_value_before2' = max(`control_value_before1'), by(firmid)
+*order control_value_before, a(control_value_before1)
+
+/*		
+sort firmid firm_occurence
+egen control_value_before1 = max(firm_occurence) if persona_encargada_proveedor[_n] == persona_encargada_proveedor[_n-1] & f2f == 1 | m2m == 1, by(firmid)
 egen control_value_before2  = max(control_value_before1), by(firmid)
-order control_value_before*, a(firm_occurence)
+order control_value_before*, a(firm_occurence)*/
+
+*browse if f2f == 1 | m2m == 1
 ***********************************************************************
 * 	PART 5:  Create a time to treat variable for treatment group
 ***********************************************************************	
@@ -287,7 +309,7 @@ twoway  (histogram time_to_treat if time_to_treat <= 50 & time_to_treat > = - 50
 			subtitle("{it:Process-level by treatment and control group}") ///
 			xtitle("Time to treatment") xlabel(#10) ///
 			note("Bin width = 1. N = 39,876 processes out of which 1,761 male-to-female & 38,115 male-to-male.", size(vsmall)) ///
-			ylabel(0(50)1000) ytitle("Total number of procurement processes")
+			ylabel(0(50)500) ytitle("Total number of procurement processes")
 graph export lags_leaps_around_gender_change_process_level_m2f.png, replace
 	
 	
@@ -297,7 +319,7 @@ graph export lags_leaps_around_gender_change_process_level_m2f.png, replace
 * 	PART 6:  Create scatterplot of coefficient	
 ***********************************************************************	
 	* set export folder for regression tables
-cd "$regression-tables"
+cd "$ppg_regression_tables"
 	* set panel data
 	
 	* estimate coefficients & se
@@ -310,7 +332,64 @@ lab var nttt50 "normalised time to treatment, +/- 50 window"
 gen nttt10 = time_to_treat + 10
 lab var nttt50 "normalised time to treatment, +/- 10 window"
 
-logit winner i.f2m##ib50.nttt50 if nttt50 <= 100 & nttt50 > 0, vce(robust)
+twoway  (histogram nttt50 if nttt50 <= 100 & nttt50 > = 0 & m2f == 1, width(1) frequency color(maroon%30)) ///
+		(histogram nttt50 if nttt50 <= 100 & nttt50 > = 0 & m2f == 0, width(1) frequency color(navy%30)), ///
+			xline(50) ///
+			legend(order(1 "Male to female" 2 "Male to male")) ///
+			title("{bf:Lags and leaps around gender change of firm representative}") ///
+			subtitle("{it:Process-level by treatment and control group}") ///
+			xtitle("Time to treatment") xlabel(#10) ///
+			note("Bin width = 1. N = 39,876 processes out of which 1,761 male-to-female & 38,115 male-to-male.", size(vsmall)) ///
+			ylabel(0(50)500) ytitle("Total number of procurement processes")
+
+
+preserve 
+drop if nttt50<0
+logit winner i.m2f##ib50.nttt50 if nttt50 <= 100 & nttt50 > 0, vce(robust)
+margins  i.m2f##ib50.nttt50, post
+matrix list e(b)
+	* create empty variables for coefficients, standard errors, & confidence intervals
+gen coef = .
+gen se = .
+
+
+forvalues x = 1(1)100 {
+	replace coef = _b[1.m2f#`x'o.nttt50] if nttt50 == `x' /* but this gener */
+	replace se   = _se[1.m2f#`x'o.nttt50] if nttt50 == `x'
+	}
+
+gen ci_top = coef + 1.96*se
+gen ci_bottom = coef - 1.96*se
+	
+	*
+keep time_to_treat coef se ci_*
+duplicates drop 
+sort time_to_treat
+
+	* create a scatterplot of coefficients with confidence intervals
+tw (rspike
+
+keep if time_to_treat <= 50 & time_to_treat > = - 50
+sum coef if time_to_treat < 0
+local mean_before = r(mean)
+sum coef if time_to_treat > 0
+local mean_after = r(mean)
+summ ci_top
+local top_range = r(max)
+summ ci_bottom
+local bottom_range = r(min)
+twoway (sc coef time_to_treat, connect(line)) ///
+	(rcap ci_top ci_bottom time_to_treat)	///
+	(function y = 0, range(time_to_treat)) ///
+	(function y = 0, range(`bottom_range' `top_range') horiz), ///
+	yline(`mean_before', lcolor(navy)) yline(`mean_after', lcolor(maroon))
+	xtitle("Time to Treatment") caption("95% Confidence Intervals Shown") ///
+	title("{bf: Event study difference-in-difference}") ///
+	subtitle("{it:Male-to-female vs. male to male}") ///
+	ytitle("Predicted probability to win a public contract")
+graph export event-study-diff-in-diff.png, replace
+
+restore
 
 preserve
 keep if time_to_treat <= 5 & time_to_treat >= -5
