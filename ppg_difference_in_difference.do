@@ -382,12 +382,12 @@ twoway (sc coef time_to_treat, connect(line)) ///
 	(rcap ci_top ci_bottom time_to_treat)	///
 	(function y = 0, range(time_to_treat)) ///
 	(function y = 0, range(`bottom_range' `top_range') horiz), ///
-	yline(`mean_before', lcolor(navy)) yline(`mean_after', lcolor(maroon))
 	xtitle("Time to Treatment") caption("95% Confidence Intervals Shown") ///
 	title("{bf: Event study difference-in-difference}") ///
 	subtitle("{it:Male-to-female vs. male to male}") ///
 	ytitle("Predicted probability to win a public contract")
 graph export event-study-diff-in-diff.png, replace
+	*yline(`mean_before', lcolor(navy)) yline(`mean_after', lcolor(maroon))
 
 restore
 
