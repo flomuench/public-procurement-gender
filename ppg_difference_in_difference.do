@@ -91,6 +91,9 @@ codebook firmid if single_change == 1
 gen never_change = (reps == 1)
 codebook firmid if never_change == 1
 				* 7387 firms, 100,119 processes
+				
+gen multiple_change = (reps > 2 & reps <.)
+codebook firmid if multiple_change == 1
 
 
 /* gen compare = (repchange == ceochange) --> suggests same in 75% but different in 25%*/
@@ -121,14 +124,20 @@ codebook firmid if male_always_same_person == 1
 			* how many male firms never change rep: 5308
 
 		* ALWAYS - & NEVER TAKERS
-gen f2f = (female_always == 1 & repchange == 1)
+*gen f2f = (female_always == 1 & repchange == 1)
+				* idea: 
+					* option 1: single_change == 1 & female_always == 1
+browse if single_change == 1 & female_always == 1
+gen f2f = . 
+replace f2f = 1 if single_change == 1 & female_always == 1
 lab var f2f "rep-change female to female"
 codebook firmid if f2f == 1
-	* 125 firms, 19,379 bids
-gen m2m = (male_always == 1 & repchange == 1)
+	* 110 firms, 4503 processes
+gen m2m = . 
+replace m2m = 1 if single_change == 1 & male_always == 1
 lab var m2m "rep-change male to male"
 codebook firmid if m2m == 1
-	* 618 firms, 171,277 bids
+	* 487 firms, 22,983 processes
 
 ********* PART 2.2.: identify firms that changed the gender of representative several times
 
@@ -160,7 +169,7 @@ replace f2m = 0 if f2f == 1
 lab var f2m "f2m vs. f2f for single gender change"
 codebook firmid if f2m == 1
 order f2m, a(persona_encargada_proveedor)
-			* 77 firms, 10,461 bids
+			* 79 firms, 2414 processes
 
 gen m2f = .
 	* idea: if single change & first observation is female it must change f2m
@@ -172,8 +181,7 @@ replace m2f = 0 if m2m == 1
 lab var m2f "m2f vs. m2m for single gender change"
 codebook firmid if m2f == 1
 order m2f, a(f2m)
-
-			* 91 firms, 6,673 bids
+			* 92 firms, 1764 processes
 
 ***********************************************************************
 * 	PART 3:  Create post variable			
