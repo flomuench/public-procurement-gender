@@ -17,7 +17,7 @@
 *	Creates:  			                          
 *																	  
 ***********************************************************************
-* 	PART 1:  create a calendar independent event variable 			
+* 	PART 1:  create a calendar independent firm occurence 			
 ***********************************************************************
 use "${ppg_intermediate}/sicop_replicable", clear
 
@@ -35,12 +35,29 @@ format date_`x' %tc
 drop fecha_`x'
 }
 
+	* generate firm occurence variable
 order date_adjudicacion, a(linea)
 
 sort firmid date_adjudicacion
 bysort firmid : gen occurrence = _n, a(firmid)
 
-	* mask: "DMY"
+	* 
+/* at later stage, time_to_treat variable suggests that some firms have 
+				* problem: time_to_treat varies by firm
+					* solution: determine event window of interest
+						* problem: for firms that bidded for big processes, small window will refer
+							* to the same processes */
+		* can different firms win subprocesses in one big process? 
+duplicates tag numero_procedimiento firmid winner , gen(process_same_firm_outcome)
+		* the below test whether always same person allocating contract, which is true (also 107,627 process-firm-officer-outcome combinations)
+duplicates tag numero_procedimiento firmid winner nombre_comprador, gen(process_same_firm_po_outcome)
+		* show processes with 0 & 1 (0,1 & 2) duplicate process-firm-outcome combinations
+browse if process_same_firm_outcome <= 1
+browse if process_same_firm_outcome <= 1
+		* this process illustrates that different companies can win different subprocesses (partidas, lineas) within one procurement process
+browse if numero_procedimiento == "2011cd-000001-0001200001"
+
+browse if numero_procedimiento == "2011cd-000001-0001200001" & process_same_firm_outcome == 0
 	
 	
 ***********************************************************************
@@ -209,23 +226,29 @@ bysort firmid (firm_occurence): replace time_to_treat = firm_occurence - `value_
 order time_to_treat, a(firm_occurence)
 format %5.0g time_to_treat
 
+	* visualise how many lags and leaps before treatment (change in reps gender)
+cd "$figures"
+histogram time_to_treat, title("{bf:Lags and leaps around gender change of firm representative}") ///
+	subtitle("{it:Bid-level rather than process-level}") ///
+	xtitle("Number of bids") xlabel(#10) ///
+	note("Bin width = 260", size(small))
+graph export lags_leaps_around_gender_change_bid_level.png
+
 * to browse firms in treatment and control group: browse if gender_change_single == 1
 
 ***********************************************************************
 * 	PART 6:  Create scatterplot of coefficient	
 ***********************************************************************	
+	* set export folder for regression tables
+cd "$regression-tables"
 	* set panel data
 	
 	* estimate coefficients & se
 		* 
 		* problem: stata does not allow negative factors
 			* solution: shift time to treat variable by a certain factor to make it all positive
-				* problem: time_to_treat varies by firm
-					* solution: determine event window of interest
-						* problem: for firms that bidded for big processes, small window will refer
-							* to the same processes
-* can different firms win subprocesses in one big process? 
-duplicates tag numero_procedimiento firmid winner, gen(process_same_firm_outcome)
+
+
 
 gen tag_same_process_diff_winner = .
 bysort firmid (firm_occurence): replace tag_same_process_diff_winner = 1 if numero_procedimiento[_n] == numero_procedimiento[_n-1] & process_same_firm_outcome == 0
