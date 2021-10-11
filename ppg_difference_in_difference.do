@@ -79,6 +79,20 @@ order repchange*, a(ceochange)
 		* how many firms never change rep?
 codebook firmid if repchange == 0
 
+		* generate dummy for firms that changed representative
+			* idea: count unique values of representative
+by firmid persona_encargada_proveedor, sort: gen reps = _n == 1, a(persona_encargada_proveedor)
+bysort firmid: replace reps = sum(reps)
+bysort firmid: replace reps = reps[_N]
+	
+gen single_change = (reps == 2)
+codebook firmid if single_change == 1
+				* 858 firms, 40,470 processs
+gen never_change = (reps == 1)
+codebook firmid if never_change == 1
+				* 7387 firms, 100,119 processes
+
+
 /* gen compare = (repchange == ceochange) --> suggests same in 75% but different in 25%*/
 
 		* generate dummy for firms that had always only female (male) representatives
@@ -193,9 +207,9 @@ format %5.0g post
 order f2f m2m, a(m2f)
 tempvar treat_value_before1 control_value_before1 treat_value_before2 control_value_before2 value_before
 sort firmid firm_occurence
-egen `control_value_before1' = max(firm_occurence) if persona_encargada_proveedor[_n] == persona_encargada_proveedor[_n-1] & f2f == 1 | m2m == 1, by(firmid)
-egen `control_value_before2'  = max(`control_value_before1'), by(firmid)
-
+egen control_value_before1 = max(firm_occurence) if persona_encargada_proveedor[_n] == persona_encargada_proveedor[_n-1] & gender_change_single == 1 & f2f == 1 | m2m == 1, by(firmid)
+egen control_value_before2  = max(control_value_before1), by(firmid)
+order control_value_before*, a(firm_occurence)
 ***********************************************************************
 * 	PART 5:  Create a time to treat variable for treatment group
 ***********************************************************************	
