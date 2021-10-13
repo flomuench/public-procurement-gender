@@ -116,7 +116,7 @@ if (1) do "${ppg_github}/ppg_generate.do"
 	Requires: sicop_replicable
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/		
-if (1) do "${ppg_github}/ppg_collapse_firm_level.do" 
+if (0) do "${ppg_github}/ppg_collapse_firm_level.do" 
 /* can be switched off to 0 after first run */
 
 /* --------------------------------------------------------------------
@@ -130,7 +130,19 @@ if (0) do "${ppg_github}/ppg_firm_level_statistics.do"
 ***********************************************************************
 * 	PART 5: 	Regression analysis		  	
 ***********************************************************************
+/* --------------------------------------------------------------------
+	PART 5.1.: multivariate regression analysis
+	Requires: sicop_replicable
+	Creates:  sicop_firm
+----------------------------------------------------------------------*/
+if (1) do "${ppg_github}/ppg_multivariate_regression.do"
 
 
+/* --------------------------------------------------------------------
+	PART 5.2.: event study with difference-in-difference approach
+	Requires: sicop_replicable
+	Creates:  sicop_firm
+----------------------------------------------------------------------*/
+if (0) do "${ppg_github}/ppg_difference_in_difference.do"
 
 

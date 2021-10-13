@@ -1,15 +1,14 @@
 ***********************************************************************
-* 			public procurement gender corrections		
+* 			public procurement gender multivariate regression		
 ***********************************************************************
 *																	  
 *	PURPOSE: replace					  							  
 *																	  
 *																	  
 *	OUTLINE:														  
-*	1)		Define non-response categories 			  				  
-* 	2) 		Encode categorical variables
-*	3)   	Replace string with numeric values						  
-*	4)  	Convert string to numerical variables	  				  	  
+*	1)		Table of logit coefficients & predicted probabilities 			  				  
+* 	2) 		Coefficient plot of predicted probabilities of main specification
+	  				  	  
 *																	  															      
 *	Author:  	Florian Muench						  
 *	ID variable: 	process level id = id ; firm level id = firmid			  					  
@@ -22,24 +21,42 @@
 use "${ppg_intermediate}/sicop_replicable", clear
 cd "$ppg_regression_tables"
 	
-	* table discrimination_correlation
-outreg2 using discrimination_correlation, excel replace
+	* table discrimination logit coefficients
 logit winner i.female_firm, vce(robust)
-outreg2 using discrimination_correlation, excel replace
+outreg2 using discrimination_coefficients, excel replace
 logit winner i.female_firm $process_controls $firm_controls, vce(robust)
-local outreg "outreg2 using discrimination_correlation, excel append"
+local outreg "outreg2 using discrimination_coefficients, excel append"
 logit winner i.female_firm##i.female_po $process_controls $firm_controls, vce(robust)
 `outreg'
 logit winner i.female_firm##i.female_po $process_controls $firm_controls, vce(cluster numero_procedimiento)
 `outreg'
 
-	* predicted probabilities of winning a public contract
+	* table discriminiation predicted probabilities
+			* c(1) average
+logit winner i.female_firm, vce(robust)
+margins i.female_firm, post
+outreg2 using discrimination_predictedprob, excel replace
+			* c(2) effect of female firm dummy
+logit winner i.female_firm $process_controls $firm_controls, vce(robust)
+margins , post
+local outreg "outreg2 using discrimination_correlation, excel append"
+`outreg'
+			* c(3) effect of firm-procurement officer gender interaction
+logit winner i.female_firm##i.female_po $process_controls $firm_controls, vce(robust)
+margins i.female_firm##i.female_po, post
+local outreg "outreg2 using discrimination_correlation, excel append"
+`outreg'
+			* c(4) = c(3) but clustered standard errors
+logit winner i.female_firm##i.female_po $process_controls $firm_controls, vce(cluster numero_procedimiento)
+margins i.female_firm##i.female_po, post
+local outreg "outreg2 using discrimination_correlation, excel append"
+`outreg'
+
+
+			* coefficient plot
 logit winner i.female_firm##i.female_po $process_controls $firm_controls, vce(robust)
 margins i.female_firm##i.female_po, post
 estimates store predictedprob, title("Predicted probabilities")
-			* Excel table
-*outreg2 predictedprob using "predictedprob", excel replace
-			* coefficient plot
 coefplot predictedprob, drop(_cons) xline(0) ///
 	xtitle("Predicted probability of winning") xlab(0.2(0.01)0.3) ///
 	graphr(color(white)) bgcol(white) plotr(color(white)) ///
