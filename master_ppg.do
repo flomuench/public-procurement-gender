@@ -32,7 +32,7 @@ qui cap log c
 *ssc install blindschemes, replace
 *net install http://www.stata.com/users/kcrow/tab2docx
 *ssc install betterbar 
-
+*ssc install xtable
 	* define graph scheme for visual outputs
 set scheme plotplain
 
@@ -118,6 +118,14 @@ if (1) do "${ppg_github}/ppg_generate.do"
 ----------------------------------------------------------------------*/		
 if (0) do "${ppg_github}/ppg_collapse_firm_level.do" 
 /* can be switched off to 0 after first run */
+
+/* --------------------------------------------------------------------
+	PART 4.2.: firm level statistics & balance table
+	Requires: sicop_firm
+	Creates:  sicop_firm
+----------------------------------------------------------------------*/
+
+if (0) do "${ppg_github}/ppg_firm_level_statistics.do"
 
 /* --------------------------------------------------------------------
 	PART 4.2.: firm level statistics & balance table
