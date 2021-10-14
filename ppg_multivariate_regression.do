@@ -39,17 +39,17 @@ outreg2 using discrimination_predictedprob, excel replace
 			* c(2) effect of female firm dummy
 logit winner i.female_firm $process_controls $firm_controls, vce(robust)
 margins , post
-local outreg "outreg2 using discrimination_correlation, excel append"
+local outreg "outreg2 using discrimination_predictedprob, excel append"
 `outreg'
 			* c(3) effect of firm-procurement officer gender interaction
 logit winner i.female_firm##i.female_po $process_controls $firm_controls, vce(robust)
 margins i.female_firm##i.female_po, post
-local outreg "outreg2 using discrimination_correlation, excel append"
+local outreg "outreg2 using discrimination_predictedprob, excel append"
 `outreg'
 			* c(4) = c(3) but clustered standard errors
 logit winner i.female_firm##i.female_po $process_controls $firm_controls, vce(cluster numero_procedimiento)
 margins i.female_firm##i.female_po, post
-local outreg "outreg2 using discrimination_correlation, excel append"
+local outreg "outreg2 using discrimination_predictedprob, excel append"
 `outreg'
 
 

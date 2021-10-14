@@ -135,7 +135,7 @@ if (0) do "${ppg_github}/ppg_firm_level_statistics.do"
 	Requires: sicop_replicable
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/
-if (1) do "${ppg_github}/ppg_multivariate_regression.do"
+if (0) do "${ppg_github}/ppg_multivariate_regression.do"
 
 
 /* --------------------------------------------------------------------

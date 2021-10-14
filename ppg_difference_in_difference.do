@@ -128,7 +128,7 @@ codebook firmid if male_always_same_person == 1
 *gen f2f = (female_always == 1 & repchange == 1)
 				* idea: 
 					* option 1: single_change == 1 & female_always == 1
-browse if single_change == 1 & female_always == 1
+*browse if single_change == 1 & female_always == 1
 gen f2f = . 
 replace f2f = 1 if single_change == 1 & female_always == 1
 lab var f2f "rep-change female to female"
@@ -191,7 +191,7 @@ order m2f, a(f2m)
 * idea: exploit the new m2f & f2m variables to create post variable for the treatment group
 	* for m2f firm, post = 1 if female_firm == 1
 	* for f2m firms, post = 1 if female_firm == 0
-gen post = .
+/* gen post = .
 	*
 replace post = 1 if m2f == 1 & female_firm == 1
 replace post = 0 if m2f == 1 & female_firm == 0
@@ -200,6 +200,7 @@ replace post = 1 if f2m == 1 & female_firm == 0
 replace post = 0 if f2m == 1 & female_firm == 1
 order post, a(m2f)
 format %5.0g post
+*/
 
 ***********************************************************************
 * 	PART 3:  Create a placebo treatment for the firms that did never change CEO			
@@ -266,7 +267,7 @@ gen time_to_treat = .
 bysort firmid (firm_occurence): replace time_to_treat = firm_occurence - `value_before'
 order time_to_treat, a(firm_occurence)
 format %5.0g time_to_treat
-
+/* 
 	* visualise how many lags and leaps before treatment (change in reps gender)
 cd "$ppg_figures"
 histogram time_to_treat, title("{bf:Lags and leaps around gender change of firm representative}") ///
@@ -312,7 +313,7 @@ twoway  (histogram time_to_treat if time_to_treat <= 50 & time_to_treat > = - 50
 			ylabel(0(50)500) ytitle("Total number of procurement processes")
 graph export lags_leaps_around_gender_change_process_level_m2f.png, replace
 	
-	
+*/
 * to browse firms in treatment and control group: browse if gender_change_single == 1
 
 ***********************************************************************
@@ -327,11 +328,15 @@ cd "$ppg_regression_tables"
 			* solution: shift time to treat variable by a certain factor to make it all positive
 				* shift factor should correspond to event window width, which needs to be determined arbitrarily
 *egen shift_factor = min(time_to_treat) if gender_change_single == 1, by(firmid)
-gen nttt50 = time_to_treat + 50
-lab var nttt50 "normalised time to treatment, +/- 50 window"
+	
+	* set window size & shift factor
 gen nttt10 = time_to_treat + 10
-lab var nttt50 "normalised time to treatment, +/- 10 window"
+lab var nttt10 "normalised time to treatment, +/- 10 window"
 
+gen nttt50 = time_to_treat + 50
+lab var nttt50 "normalised time to treatment, +/- 10 window"
+	
+	* visualise number of observations per process around change
 twoway  (histogram nttt50 if nttt50 <= 100 & nttt50 > = 0 & m2f == 1, width(1) frequency color(maroon%30)) ///
 		(histogram nttt50 if nttt50 <= 100 & nttt50 > = 0 & m2f == 0, width(1) frequency color(navy%30)), ///
 			xline(50) ///
@@ -341,59 +346,84 @@ twoway  (histogram nttt50 if nttt50 <= 100 & nttt50 > = 0 & m2f == 1, width(1) f
 			xtitle("Time to treatment") xlabel(#10) ///
 			note("Bin width = 1. N = 39,876 processes out of which 1,761 male-to-female & 38,115 male-to-male.", size(vsmall)) ///
 			ylabel(0(50)500) ytitle("Total number of procurement processes")
+graph export lags_leaps_around_gender_change_process_level_m2f_50.png, replace
+			
+twoway  (histogram nttt10 if nttt10 <= 20 & nttt10 > = 0 & m2f == 1, width(1) frequency color(maroon%30)) ///
+		(histogram nttt10 if nttt10 <= 20 & nttt10 > = 0 & m2f == 0, width(1) frequency color(navy%30)), ///
+			xline(20) ///
+			legend(order(1 "Male to female" 2 "Male to male")) ///
+			title("{bf:Lags and leaps around gender change of firm representative}") ///
+			subtitle("{it:Process-level by treatment and control group}") ///
+			xtitle("Time to treatment") xlabel(#10) ///
+			ylabel(0(50)500) ytitle("Total number of procurement processes")
+graph export lags_leaps_around_gender_change_process_level_m2f_10.png, replace
 
-
+	* only keep observations within the event window
 preserve 
-drop if nttt50<0
-logit winner i.m2f##ib50.nttt50 if nttt50 <= 100 & nttt50 > 0, vce(robust)
-margins  i.m2f##ib50.nttt50, post
+drop if nttt10<0
+	
+	* run the diff-in-diff regression around the event window 
+logit winner i.m2f##ib20.nttt10 if nttt10 <= 20 & nttt10 > 0, vce(robust)
+margins  i.m2f##ib20.nttt10, post
 matrix list e(b)
 	* create empty variables for coefficients, standard errors, & confidence intervals
-gen coef = .
+gen coef_treat = .
+gen coef_control = .
 gen se = .
 
-
-forvalues x = 1(1)100 {
-	replace coef = _b[1.m2f#`x'o.nttt50] if nttt50 == `x' /* but this gener */
-	replace se   = _se[1.m2f#`x'o.nttt50] if nttt50 == `x'
+	* loop to list the coefficients for each process lag & leap
+forvalues x = 1(1)20 {
+	replace coef_treat = _b[1.m2f#`x'o.nttt10] if nttt10 == `x' /* but this gener */
+	replace coef_control = _b[0.m2f#`x'o.nttt10] if nttt10 == `x' 
+	replace se   = _se[1.m2f#`x'o.nttt10] if nttt10 == `x'
 	}
-
-gen ci_top = coef + 1.96*se
-gen ci_bottom = coef - 1.96*se
 	
-	*
-keep time_to_treat coef se ci_*
+	* create ci intervals
+gen ci_top_treat = coef_treat + 1.96*se
+gen ci_bottom_treat = coef_treat - 1.96*se
+gen ci_top_control = coef_control + 1.96*se
+gen ci_bottom_control = coef_control - 1.96*se
+	
+	* keep only
+keep time_to_treat coef_* se ci_*
 duplicates drop 
 sort time_to_treat
 
 	* create a scatterplot of coefficients with confidence intervals
-tw (rspike
-
-keep if time_to_treat <= 50 & time_to_treat > = - 50
-sum coef if time_to_treat < 0
-local mean_before = r(mean)
-sum coef if time_to_treat > 0
-local mean_after = r(mean)
-summ ci_top
-local top_range = r(max)
-summ ci_bottom
-local bottom_range = r(min)
-twoway (sc coef time_to_treat, connect(line)) ///
-	(rcap ci_top ci_bottom time_to_treat)	///
+keep if time_to_treat <= 10 & time_to_treat > = - 10
+local status "treat control"
+foreach x of local status {
+sum coef_`x' if time_to_treat < 0
+local mean_before_`x' = r(mean)
+sum coef_`x' if time_to_treat > 0
+local mean_after_`x' = r(mean)
+summ ci_top_`x'
+local top_range_`x' = r(max)
+summ ci_bottom_`x'
+local bottom_range_`x' = r(min)
+}
+/*twoway (sc coef_treat coef_control time_to_treat, connect(line) connect(line)) ///
+	(rcap ci_top_treat ci_bottom_treat time_to_treat)	///
+	(rcap ci_top_control ci_bottom_control time_to_treat)	///
 	(function y = 0, range(time_to_treat)) ///
-	(function y = 0, range(`bottom_range' `top_range') horiz), ///
+	(function y = 0, range(`bottom_range_treat' `top_range_treat') horiz) ///
+	(function y = 0, range(`bottom_range_control' `top_range_control') horiz), ///
 	xtitle("Time to Treatment") caption("95% Confidence Intervals Shown") ///
 	title("{bf: Event study difference-in-difference}") ///
 	subtitle("{it:Male-to-female vs. male to male}") ///
 	ytitle("Predicted probability to win a public contract")
-graph export event-study-diff-in-diff.png, replace
+graph export event-study-diff-in-diff_10.png, replace
 	*yline(`mean_before', lcolor(navy)) yline(`mean_after', lcolor(maroon))
-
+*/
+twoway (sc coef_treat coef_control time_to_treat, connect(line) connect(line)) ///
+	(rcap ci_top_treat ci_bottom_treat time_to_treat)	///
+	(rcap ci_top_control ci_bottom_control time_to_treat)	///
+	(function y = 0, range(time_to_treat)) ///
+	xtitle("Time to Treatment") caption("95% Confidence Intervals Shown") ///
+	title("{bf: Event study difference-in-difference}") ///
+	subtitle("{it:Male-to-female vs. male to male}") ///
+	ytitle("Predicted probability to win a public contract")
+*graph export event-study-diff-in-diff_10_exp.png, replace
+	
 restore
 
-preserve
-keep if time_to_treat <= 5 & time_to_treat >= -5
-tw ///
-	(kdensity winner if m2f == 1, lp(dash) lc(maroon) bwidth(.5)) ///
-	(kdensity winner if f2m == 1, lp(dash) lc(navy) bwidth(.5)) 
-restore
