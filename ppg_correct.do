@@ -73,18 +73,50 @@ bysort firmid: strgroup persona_encargada_proveedor, generate(rep) threshold(.7)
  
 		* option 2 cross
 contract firmid nombre_proveedor persona_encargada_proveedor
+gen id = _n
 preserve
 rename persona_encargada_proveedor persona_encargada_proveedor2
 tempfile persona_encargada_proveedor2
 save `persona_encargada_proveedor2'
 restore
-cross using `persona_encargada_proveedor2'
-drop if persona_encargada_proveedor2>=persona_encargada_proveedor
+merge 1:1 id using `persona_encargada_proveedor2'
+*drop if persona_encargada_proveedor2>=persona_encargada_proveedor
 matchit persona_encargada_proveedor persona_encargada_proveedor2
-list if similscore>0.5, clean
+list if similscore>0.8, clean
 
 	* option 3 same as 2 but use levenstein instead
+contract firmid nombre_proveedor persona_encargada_proveedor
+tempfile data
+save `data'
+*TURN TIMER ON
+timer on 1
+*BREAK IT UP INTO TENTHS AND CROSS
+forval i=1/11{
+keep if inrange(_n,`i'000-999,`i'000)
+rename persona_encargada_proveedor persona_encargada_proveedor2
+tempfile ds`i'
+save `ds`i''
+use `data', clear
+}
 
+forval i=1/11{
+cross using `ds`i''
+tempfile cds`i'
+save `cds`i''
+use `data', clear
+}
+
+*APPEND DATA SETS
+use `cds1', clear
+forval i=2/11{
+append using `cds`i''
+}
+*TURN OFF TIMER
+timer off 1
+drop if persona_encargada_proveedor2>=persona_encargada_proveedor
+matchit persona_encargada_proveedor persona_encargada_proveedor2
+list if similscore>0.5, clean	
+	
 ***********************************************************************
 * 	PART 4:  Convert string to numerical variables	  			
 ***********************************************************************
