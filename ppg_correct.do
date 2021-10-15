@@ -46,6 +46,46 @@ replace genderfo = 0 if firmid == 7 & persona_encargada_proveedor == "luis gonza
 
 
 ***********************************************************************
+* 	PART 4:  Code missing gender values	 + correct spelling
+***********************************************************************
+	* export Excel file with all the different values of female_firm per firm
+preserve
+contract firmid nombre_proveedor persona_encargada_proveedor female_firm
+format %40s nombre_proveedor persona_encargada_proveedor
+sort firmid female_firm persona_encargada_proveedor
+	* 382 missing values
+cd "$ppg_intermediate"
+export excel using missing_names if female_firm == ., replace firstrow(var)
+	* import excel with missing names gender coded
+import excel using missing_names_coded, clear firstrow
+tempfile missings_coded
+save "`missings_coded'"
+restore
+merge m:1 firmid persona_encargada_proveedor using `missings_coded', replace update
+
+	* try to identify/match names with small spelling differences
+drop _freq
+ssc install strgroup, replace
+contract firmid nombre_proveedor persona_encargada_proveedor
+		
+		* option 1 strgroup
+bysort firmid: strgroup persona_encargada_proveedor, generate(rep) threshold(.7) first
+ 
+		* option 2 cross
+contract firmid nombre_proveedor persona_encargada_proveedor
+preserve
+rename persona_encargada_proveedor persona_encargada_proveedor2
+tempfile persona_encargada_proveedor2
+save `persona_encargada_proveedor2'
+restore
+cross using `persona_encargada_proveedor2'
+drop if persona_encargada_proveedor2>=persona_encargada_proveedor
+matchit persona_encargada_proveedor persona_encargada_proveedor2
+list if similscore>0.5, clean
+
+	* option 3 same as 2 but use levenstein instead
+
+***********************************************************************
 * 	PART 4:  Convert string to numerical variables	  			
 ***********************************************************************
 /*foreach x of global numvarc {
