@@ -48,6 +48,29 @@ replace genderfo = 0 if firmid == 7 & persona_encargada_proveedor == "luis gonza
 ***********************************************************************
 * 	PART 4:  Code missing gender values	 + correct spelling
 ***********************************************************************
+preserve
+	* deep clean 
+		* only keep one line per firm-representative pair as other data too big
+contract firmid nombre_proveedor persona_encargada_proveedor
+
+quietly tab persona_encargada_proveedor
+local oldr = r(r)
+display "There are `oldr' unique values of firm representatives"
+				* 10 193 unique values of firm representative
+
+
+bysort persona_encargada_proveedor: gen oldn = _N
+		* make all observations lowercase
+gen firm_rep = lower(persona_encargada_proveedor)
+bysort firm_rep: gen newn = _N
+
+sort firm_rep oldn
+browse persona_encargada_proveedor firm_rep oldn newn if oldn != newn
+
+tab persona_encargada_proveedor
+local oldr = r(r)
+display "There are `oldr' unique values of firm representatives"
+	
 	* export Excel file with all the different values of female_firm per firm
 preserve
 contract firmid nombre_proveedor persona_encargada_proveedor female_firm

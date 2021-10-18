@@ -5,12 +5,12 @@
 *	PURPOSE: Generate variables for analysis															
 *																	  
 *	OUTLINE:														  
-*	1)				generate age variables		  						  
-*	2)   						  		    
-*	3)  					  		  
-*	4)  				  				  
-*	5)  					  			  
-*	6)  					  				  
+*	1)				firm age		  						  
+*	2)   			firm location	  		    
+*	3)  			firm country of origin	  
+*	4)  			firm size
+*	5)  			firm occurence, calendar independent 			  
+*	6)  			
 *	7)											  
 *	8)												  
 *																	  
@@ -20,15 +20,22 @@
 *	Creates:  			   						  
 *																	  
 ***********************************************************************
-* 	PART START:  Gen treatment status variable		  			
+* 	PART START:  Load data set		  			
 ***********************************************************************
 use "${ppg_intermediate}/sicop_replicable", clear
 
 ***********************************************************************
-* 	PART 0:  create a process id			
+* 	PART 0:  create Stata recognized date variables			
 ***********************************************************************
-egen process_id = group(numero_procedimient partida linea)
-order process_id, a(linea)
+* browse id numero_procedimiento year fecha_publicacion fecha_adjudicacion partida linea nombre_proveedor firmid 
+
+	* create State recognized time variables to create a running event variable
+local fechas "publicacion adjudicacion registro"
+foreach x of local fechas {
+gen date_`x' = clock(fecha_`x', "DM20Yhms"), a(fecha_`x')
+format date_`x' %tc
+drop fecha_`x'
+}
 
 ***********************************************************************
 * 	PART 1:  generate age variables			
@@ -79,6 +86,14 @@ lab val firm_international international
 ***********************************************************************
 tab firm_size, gen(firm_size)
 
+
+***********************************************************************
+* 	PART 5: generate firm occurence variable			
+***********************************************************************
+sort firmid date_adjudicacion numero_procedimiento partida linea
+by firmid: gen firm_occurence = _n, a(firmid)
+format %5.0g firmid firm_occurence
+	
 
 ***********************************************************************
 * 	Save the changes made to the data		  			

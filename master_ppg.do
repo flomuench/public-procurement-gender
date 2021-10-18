@@ -151,6 +151,15 @@ if (0) do "${ppg_github}/ppg_multivariate_regression.do"
 	Requires: sicop_replicable
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/
-if (0) do "${ppg_github}/ppg_difference_in_difference.do"
+	* correct, collapse data set
+if (0) do "${ppg_github}/ppg_did_collapse.do"
 
+	* generate variables/identify treatment groups
+if (0) do "${ppg_github}/ppg_did_generate.do"
+
+	* regression analysis
+if (0) do "${ppg_github}/ppg_did_regresssions.do"
+
+	* visualisations
+if (0) do "${ppg_github}/ppg_did_visualisations.do"
 
