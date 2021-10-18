@@ -10,7 +10,7 @@
 *	3)  			firm country of origin	  
 *	4)  			firm size
 *	5)  			firm occurence, calendar independent 			  
-*	6)  			
+*	6)  
 *	7)											  
 *	8)												  
 *																	  
@@ -93,7 +93,7 @@ tab firm_size, gen(firm_size)
 sort firmid date_adjudicacion numero_procedimiento partida linea
 by firmid: gen firm_occurence = _n, a(firmid)
 format %5.0g firmid firm_occurence
-	
+
 
 ***********************************************************************
 * 	Save the changes made to the data		  			

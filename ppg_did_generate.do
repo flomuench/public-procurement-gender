@@ -24,8 +24,11 @@
 ***********************************************************************
 * 	PART START:  Load data set		  			
 ***********************************************************************
+	* load the data
 use "${ppg_intermediate}/sicop_did", clear
 
+	* drop the treatment groups variables defined on bid-level
+drop reps single_change never_change mutiple_change
 
 ***********************************************************************
 * 	PART 1:  identify the different treatment groups 			
@@ -35,7 +38,7 @@ use "${ppg_intermediate}/sicop_did", clear
 		* as change in rep could indicate firm performs less well before, hence
 		* effect observed after rep change would reflect change from low to high performing
 		* individual rather than change in gender
-
+	
 ***********************************************************************
 * 	PART 2: dummy for change in representative 	"repchange"		
 ***********************************************************************
