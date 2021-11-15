@@ -94,6 +94,28 @@ sort firmid date_adjudicacion numero_procedimiento partida linea
 by firmid: gen firm_occurence = _n, a(firmid)
 format %5.0g firmid firm_occurence
 
+***********************************************************************
+* 	PART 5:  single, never, multiple changes in representative 
+***********************************************************************
+	* idea: only look at firms that have more than 1 distinct name
+		* gen count number of representatives & dummy for single rep		
+			* idea: count unique values of representative
+by firmid persona_encargada_proveedor, sort: gen reps = _n == 1, a(persona_encargada_proveedor)
+bysort firmid: replace reps = sum(reps)
+bysort firmid: replace reps = reps[_N]
+	
+gen single_change = (reps == 2)
+codebook firmid if single_change == 1
+				* 860 firms, 40,470 processs
+				
+gen never_change = (reps == 1)
+codebook firmid if never_change == 1
+				* 7384 firms, 100,119 processes
+
+gen multiple_change = (reps > 2 & reps <.)
+codebook firmid if multiple_change == 1
+				* 417 firms
+
 
 ***********************************************************************
 * 	Save the changes made to the data		  			

@@ -127,13 +127,6 @@ if (0) do "${ppg_github}/ppg_collapse_firm_level.do"
 
 if (0) do "${ppg_github}/ppg_firm_level_statistics.do"
 
-/* --------------------------------------------------------------------
-	PART 4.2.: firm level statistics & balance table
-	Requires: sicop_firm
-	Creates:  sicop_firm
-----------------------------------------------------------------------*/
-
-if (0) do "${ppg_github}/ppg_firm_level_statistics.do"
 
 ***********************************************************************
 * 	PART 5: 	Regression analysis		  	
