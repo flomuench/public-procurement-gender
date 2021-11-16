@@ -32,7 +32,7 @@ qui cap log c
 *ssc install blindschemes, replace
 *net install http://www.stata.com/users/kcrow/tab2docx
 *ssc install betterbar 
-
+*ssc install xtable
 	* define graph scheme for visual outputs
 set scheme plotplain
 
@@ -63,6 +63,16 @@ global ppg_figures = "${ppg_output}/figures"
 global ppg_regression_tables = "${ppg_output}/regression-tables"
 global ppg_descriptive_statistics = "${ppg_output}/descriptive-statistics"
 	
+		* globals for regression tables
+global process_controls "i.tipo ratio_firmpo_fm year i.institution_type number_competitors i.sector"
+global firm_controls "i.firm_size firm_age_ca i.firm_location" /*firm capital not used bc collinearity */
+		
+		* globals for graphs
+/*global graph_opts title(, justification(left) color(black) span pos(11)) ///
+	graphregion(color(white)) ylab(,angle(0) nogrid notick) xscale(noline) yscale(noline) yline(0 , lc(black)) ///
+	xtit(,placement(left) justification(left)) legend(region(lc(none) fc(none)))
+*/
+		
 		* global for numerical variables*
 *global numvar ml_prix q393 q392 q391
 
@@ -106,7 +116,7 @@ if (1) do "${ppg_github}/ppg_generate.do"
 	Requires: sicop_replicable
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/		
-if (1) do "${ppg_github}/ppg_collapse_firm_level.do" 
+if (0) do "${ppg_github}/ppg_collapse_firm_level.do" 
 /* can be switched off to 0 after first run */
 
 /* --------------------------------------------------------------------
@@ -116,3 +126,33 @@ if (1) do "${ppg_github}/ppg_collapse_firm_level.do"
 ----------------------------------------------------------------------*/
 
 if (0) do "${ppg_github}/ppg_firm_level_statistics.do"
+
+
+***********************************************************************
+* 	PART 5: 	Regression analysis		  	
+***********************************************************************
+/* --------------------------------------------------------------------
+	PART 5.1.: multivariate regression analysis
+	Requires: sicop_replicable
+	Creates:  sicop_firm
+----------------------------------------------------------------------*/
+if (0) do "${ppg_github}/ppg_multivariate_regression.do"
+
+
+/* --------------------------------------------------------------------
+	PART 5.2.: event study with difference-in-difference approach
+	Requires: sicop_replicable
+	Creates:  sicop_firm
+----------------------------------------------------------------------*/
+	* correct, collapse data set
+if (0) do "${ppg_github}/ppg_did_collapse.do"
+
+	* generate variables/identify treatment groups
+if (0) do "${ppg_github}/ppg_did_generate.do"
+
+	* regression analysis
+if (0) do "${ppg_github}/ppg_did_regresssions.do"
+
+	* visualisations
+if (0) do "${ppg_github}/ppg_did_visualisations.do"
+

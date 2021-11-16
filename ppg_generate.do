@@ -5,12 +5,12 @@
 *	PURPOSE: Generate variables for analysis															
 *																	  
 *	OUTLINE:														  
-*	1)				generate age variables		  						  
-*	2)   						  		    
-*	3)  					  		  
-*	4)  				  				  
-*	5)  					  			  
-*	6)  					  				  
+*	1)				firm age		  						  
+*	2)   			firm location	  		    
+*	3)  			firm country of origin	  
+*	4)  			firm size
+*	5)  			firm occurence, calendar independent 			  
+*	6)  
 *	7)											  
 *	8)												  
 *																	  
@@ -20,9 +20,22 @@
 *	Creates:  			   						  
 *																	  
 ***********************************************************************
-* 	PART 1:  Gen treatment status variable		  			
+* 	PART START:  Load data set		  			
 ***********************************************************************
 use "${ppg_intermediate}/sicop_replicable", clear
+
+***********************************************************************
+* 	PART 0:  create Stata recognized date variables			
+***********************************************************************
+* browse id numero_procedimiento year fecha_publicacion fecha_adjudicacion partida linea nombre_proveedor firmid 
+
+	* create State recognized time variables to create a running event variable
+local fechas "publicacion adjudicacion registro"
+foreach x of local fechas {
+gen date_`x' = clock(fecha_`x', "DM20Yhms"), a(fecha_`x')
+format date_`x' %tc
+drop fecha_`x'
+}
 
 ***********************************************************************
 * 	PART 1:  generate age variables			
@@ -35,6 +48,7 @@ foreach var of local dates {
 	destring year_`var', replace
 	replace year_`var' = year_`var' + 2000
 }
+
 	* do the same for the year when the firm was founded (different format thus not in loop)
 gen year_constitucion = substr(fecha_constitucion, -4, .), a(fecha_constitucion)
 destring year_constitucion, replace
@@ -72,51 +86,36 @@ lab val firm_international international
 ***********************************************************************
 tab firm_size, gen(firm_size)
 
-***********************************************************************
-* 	PART 5:  generate male firm application dummy 
-***********************************************************************
-gen gendermo = .
-replace gendermo = 0 if genderfo == 1
-replace gendermo = 1 if genderfo == 0
 
 ***********************************************************************
-* 	PART 6:  generate male firm application dummy 
+* 	PART 5: generate firm occurence variable			
 ***********************************************************************
-gen gendermo = .
-replace gendermo = 0 if genderfo == 1
-replace gendermo = 1 if genderfo == 0
-
-***********************************************************************
-* 	PART 7:  generate male firm win dummy 
-***********************************************************************
-gen male_win = .
-replace male_win = 0 if female_win == 1
-replace male_win = 1 if female_win == 0
+sort firmid date_adjudicacion numero_procedimiento partida linea
+by firmid: gen firm_occurence = _n, a(firmid)
+format %5.0g firmid firm_occurence
 
 ***********************************************************************
-* 	PART 8:  generate precio_usd, dollar version from variable precio_crc 
+* 	PART 5:  single, never, multiple changes in representative 
 ***********************************************************************
+	* idea: only look at firms that have more than 1 distinct name
+		* gen count number of representatives & dummy for single rep		
+			* idea: count unique values of representative
+by firmid persona_encargada_proveedor, sort: gen reps = _n == 1, a(persona_encargada_proveedor)
+bysort firmid: replace reps = sum(reps)
+bysort firmid: replace reps = reps[_N]
+	
+gen single_change = (reps == 2)
+codebook firmid if single_change == 1
+				* 860 firms, 40,470 processs
+				
+gen never_change = (reps == 1)
+codebook firmid if never_change == 1
+				* 7384 firms, 100,119 processes
 
-cd "/Users/yamivargas/Google Drive/Public Procurement and Gender/Data/Yami_Flo/"
-import delimited Exchangerate.csv, clear
+gen multiple_change = (reps > 2 & reps <.)
+codebook firmid if multiple_change == 1
+				* 417 firms
 
-ren costaricacri pesos
-ren time ano
-
-keep ano pesos
-drop if mi(ano)
-
-save exchangerate, replace
-
-use "SICOP_gender_new_workingversion.dta", clear
-
-destring ano, replace
-
-cap drop _merge
-
-merge m:1 ano using exchangerate
-
-gen PRECIO_usd = PRECIO_CRC / pesos
 
 ***********************************************************************
 * 	Save the changes made to the data		  			

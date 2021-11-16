@@ -30,7 +30,9 @@ rename *, lower
 ***********************************************************************
 * 	PART 2: 	Drop variables		  			
 ***********************************************************************
-drop firm_size firm_founded firm_registration firm_registro
+drop firm_size firm_founded firm_registration firm_registro date_ca date_pu ///
+	date_contract_published date_contract_allocated firm_age_registro ///
+	firm_appearance
 
 ***********************************************************************
 * 	PART 3: 	Format string & numerical variables		  			
@@ -40,16 +42,18 @@ ds, has(type string)
 local strvars "`r(varlist)'"
 format %15s `strvars'
 format %25s numero_procedimiento
+format %5s partida
  
 ds, has(type numeric) 
 local numvars "`r(varlist)'"
 format %20.0fc `numvars'
-format %9.0g id firmid
+format %9.0g id firmid year female_firm
+format %5.0g linea genderfo ceochange ceof2m ceom2f winner cantidad
 
 ***********************************************************************
 * 	PART 4: 	Order the variables in the data set		  			
 ***********************************************************************
-
+ 
 ***********************************************************************
 * 	PART 5: 	Rename the variables		  			
 ***********************************************************************
@@ -66,10 +70,11 @@ lab var female_firm "firm represented by a women = 1"
 ***********************************************************************
 		* label values of representatives gender
 			* firm
-lab def gender 0 "male" 1 "female"
-lab val female_firm gender
+lab def genderfirm 0 "male firm" 1 "female firm"
+lab val female_firm genderfirm
 			* procurement officer
-	
+lab def genderpo 0 "male officer" 1 "female officer"
+lab val female_po genderpo
 
 ***********************************************************************
 * 	PART 8: Removing trail and leading spaces in string values that will be converted into numeric values*	  			
@@ -91,10 +96,9 @@ sort numero_procedimiento partida linea
 cd "$ppg_github"
 export excel ppg_codebook_variables in 1/1, firstrow(variables) replace
 export excel ppg_codebook_labels in 1/1, firstrow(varlabels) replace
-cd "$ppg_intermediate"
 
 ***********************************************************************
 * 	Save the changes made to the data		  			
 ***********************************************************************
-
+cd "$ppg_intermediate"
 save "sicop_replicable", replace

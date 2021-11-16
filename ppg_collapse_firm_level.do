@@ -76,6 +76,7 @@ label var avg_comp "mean competitors in bid"
 	* average number of competitors = done 
 	* average points for offer = done
 	
+	
 ***********************************************************************
 * 	PART END: 	Save firm level data set		  			
 ***********************************************************************
