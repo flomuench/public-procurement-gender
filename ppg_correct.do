@@ -449,7 +449,6 @@ replace persona_encargada_proveedor = "carlos moreno" if persona_encargada_prove
 replace persona_encargada_proveedor = "arturo monge" if persona_encargada_proveedor == "jorge arturo monge salazar"
 replace persona_encargada_proveedor = "nikolay gandev" if persona_encargada_proveedor == "nikolay dobrev gandev georgieva"
 replace persona_encargada_proveedor = "ricardo amador cespedes" if persona_encargada_proveedor == "ricardo amador leon"
-
 replace persona_encargada_proveedor = "nirmod ezuz"if persona_encargada_proveedor == "nimrod ezuz"
 replace persona_encargada_proveedor = "juan josé león peña" if persona_encargada_proveedor == "juan jose leon peÑa"
 replace persona_encargada_proveedor = "alejandro muñoz" if persona_encargada_proveedor == "alejandro muÑoz"
@@ -471,21 +470,23 @@ replace persona_encargada_proveedor = "javier bonilla arguedas" if persona_encar
 replace persona_encargada_proveedor = "nelson mattie" if persona_encargada_proveedor == "nelson norlui mattie d jesus"
 replace persona_encargada_proveedor = "richard alonso rodriguez mora" if persona_encargada_proveedor == "richard rodríguez"
 replace persona_encargada_proveedor = "rolando paiz" if persona_encargada_proveedor == "rolando jose paiz gonzalez"
-
 replace persona_encargada_proveedor = "roger mendez viquez" if persona_encargada_proveedor == "róger méndez víquez"
 replace persona_encargada_proveedor = "maykol gómez tréjos" if persona_encargada_proveedor == "maykolgomez trejos"
+replace persona_encargada_proveedor = "maykol gómez tréjos" if persona_encargada_proveedor == "maikol gomez trejos"
 replace persona_encargada_proveedor = "marco alpizar" if persona_encargada_proveedor == "marcos vinicio alpizar bolaÑos"
 replace persona_encargada_proveedor = "denis zuniga" if persona_encargada_proveedor == "denis arnaldo zuniga aplicano"
-replace persona_encargada_proveedor = "francisco javier rodriguez hurtado" if persona_encargada_proveedor == "francisco antonio rodriguez"
-replace persona_encargada_proveedor = "Maykol Gómez Tréjos" if persona_encargada_proveedor == "Maikol Gomez Trejos"
-replace persona_encargada_proveedor = "Marco Vargas Barrientos" if persona_encargada_proveedor == "Marco V. Vargas Gutiérrez"
+replace persona_encargada_proveedor = "jorge lizano" if persona_encargada_proveedor == "jorge guillermo lizano seas"
+replace persona_encargada_proveedor = "javier garro" if persona_encargada_proveedor == "javier alonso garro sanchez"
+replace persona_encargada_proveedor = "mario guillermo chi ruano" if persona_encargada_proveedor == "mario chi"
+replace persona_encargada_proveedor = "miguel antonio yamuni zeledon" if persona_encargada_proveedor == "juan miguel yamuni"
+replace persona_encargada_proveedor = "richard mesén vásquez" if persona_encargada_proveedor == "richard francisco mesen vasquez"
+replace persona_encargada_proveedor = "ana lucia gonzalez garcia" if persona_encargada_proveedor == "ana lucía gonzález"
+replace persona_encargada_proveedor = "arline villalobos s." if persona_encargada_proveedor == "ana lucía gonzález"
+replace persona_encargada_proveedor = "hernán a. hernández zamora" if persona_encargada_proveedor == "hernan antonio hernandez zamora"
+replace persona_encargada_proveedor = "adrian esteban fernandez castro" if persona_encargada_proveedor == "adrián fernández castro"
+replace persona_encargada_proveedor = "giovanni antonio carrion ballestero" if persona_encargada_proveedor == "geovanny carrión ballestero"
+replace persona_encargada_proveedor = "jorge enrique vieto morales" if persona_encargada_proveedor == "jorge vieto piÑeres"
 
-
-replace persona_encargada_proveedor = "denis zuniga" if persona_encargada_proveedor == "denis arnaldo zuniga aplicano"
-replace persona_encargada_proveedor = "denis zuniga" if persona_encargada_proveedor == "denis arnaldo zuniga aplicano"
-replace persona_encargada_proveedor = "denis zuniga" if persona_encargada_proveedor == "denis arnaldo zuniga aplicano"
-replace persona_encargada_proveedor = "denis zuniga" if persona_encargada_proveedor == "denis arnaldo zuniga aplicano"
-replace persona_encargada_proveedor = "denis zuniga" if persona_encargada_proveedor == "denis arnaldo zuniga aplicano"
 }
 
 * still to code
