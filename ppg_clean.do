@@ -22,7 +22,11 @@
 ***********************************************************************
 * 	PART 1: 	Make all variables names lower case		  			
 ***********************************************************************
-use "${ppg_raw}/SICOP_gender_new_workingversion", clear
+use "/Users/yamivargas/Google Drive (not syncing)/Public Procurement and Gender/Data/Yami_Flo/SICOP_gender_new_workingversion.dta", clear
+
+
+
+
 
 rename TIPO tipo_s
 rename *, lower

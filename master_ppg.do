@@ -47,11 +47,13 @@ if c(os) == "Windows" {
 	global ppg_backup = "C:/Users/`c(username)'/Documents/backup-public-procurement-gender"
 }
 else if c(os) == "MacOSX" {
-	global ppg_gdrive = "Users/`c(username)'/Google Drive/Public Procurement and Gender"
-	global ppg_github = "Users/`c(username)'/Documents/GitHub/public-procurement-gender"
+	*global ppg_gdrive = "Users/`c(username)'/Google Drive/Public Procurement and Gender"
+	global ppg_gdrive = "/Volumes/GoogleDrive/My Drive/Public Procurement and Gender"
+	global ppg_github = "/GitHub/public-procurement-gender"
 	global ppg_backup = "Users/`c(username)'/Documents/backup-public-procurement-gender"
+	
 }
-		
+
 		* globals: dynamic sub-folder 
 			* data
 global ppg_data = "${ppg_gdrive}/Data/Yami_Flo"
@@ -105,7 +107,7 @@ if (1) do "${ppg_github}/ppg_correct.do"
 	Requires: sicop_replicable
 	Creates:  sicop_replicable
 ----------------------------------------------------------------------*/		
-if (1) do "${ppg_github}/ppg_generate.do"
+if (0) do "${ppg_github}/ppg_generate.do"
 
 ***********************************************************************
 * 	PART 4: 	Run descriptive statistics do files		  	
