@@ -26,7 +26,7 @@ use "${ppg_intermediate}/sicop_replicable", clear
 ds, has(type string) 
 local strvars "`r(varlist)'"
 foreach x of local strvars {
-replace `x'= strutrun(strtrim(lower(`x')))
+replace `x'= stritrim(strtrim(lower(`x')))
 }
 
 ***********************************************************************
@@ -58,14 +58,26 @@ sort firmid female_firm persona_encargada_proveedor
 	* 382 missing values
 cd "$ppg_intermediate"
 export excel using missing_names if female_firm == ., replace firstrow(var)
+
+restore
+*/
+cd "$ppg_intermediate"
+preserve
 	* import excel with missing names gender coded
 import excel using missing_names_coded, clear firstrow
 tempfile missings_coded
-save "`missings_coded'"
+save "`missings_coded'", replace
 restore
-*/
-
-* merge m:1 firmid persona_encargada_proveedor using missings_coded, replace update
+drop _merge
+merge m:1 firmid persona_encargada_proveedor using `missings_coded', replace update
+replace genderfo = 0 if _merge == 4 | _merge == 5 & female_firm == 0
+replace genderfo = 1 if _merge == 4 | _merge == 5 & female_firm == 1
+	
+	* make manual corrections for conflicting merge results
+replace genderfo = 0 if persona_encargada_proveedor == "ricardo barrantes chacón"
+replace genderfo = 1 if persona_encargada_proveedor == "ana milena yepes garces"
+replace genderfo = 1 if persona_encargada_proveedor == "delali campbell callimore"
+replace genderfo = 1 if persona_encargada_proveedor == "kenny granados hodgson"
 
 
 
