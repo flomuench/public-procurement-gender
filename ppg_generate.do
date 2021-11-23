@@ -29,12 +29,11 @@ use "${ppg_intermediate}/sicop_replicable", clear
 ***********************************************************************
 * browse id numero_procedimiento year fecha_publicacion fecha_adjudicacion partida linea nombre_proveedor firmid 
 
-	* create State recognized time variables to create a running event variable
+	* create Stata recognized time variables to create a running event variable
 local fechas "publicacion adjudicacion registro"
 foreach x of local fechas {
 gen date_`x' = clock(fecha_`x', "DM20Yhms"), a(fecha_`x')
 format date_`x' %tc
-drop fecha_`x'
 }
 
 ***********************************************************************

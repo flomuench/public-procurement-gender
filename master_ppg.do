@@ -33,6 +33,7 @@ qui cap log c
 *net install http://www.stata.com/users/kcrow/tab2docx
 *ssc install betterbar 
 *ssc install xtable
+ssc install coefplot
 	* define graph scheme for visual outputs
 set scheme plotplain
 
@@ -66,6 +67,7 @@ global ppg_descriptive_statistics = "${ppg_output}/descriptive-statistics"
 		* globals for regression tables
 global process_controls "i.tipo ratio_firmpo_fm year i.institution_type number_competitors i.sector"
 global firm_controls "i.firm_size firm_age_ca i.firm_location" /*firm capital not used bc collinearity */
+		
 		
 		* globals for graphs
 /*global graph_opts title(, justification(left) color(black) span pos(11)) ///
@@ -118,13 +120,11 @@ if (1) do "${ppg_github}/ppg_generate.do"
 ----------------------------------------------------------------------*/		
 if (0) do "${ppg_github}/ppg_collapse_firm_level.do" 
 /* can be switched off to 0 after first run */
-
 /* --------------------------------------------------------------------
 	PART 4.2.: firm level statistics & balance table
 	Requires: sicop_firm
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/
-
 if (0) do "${ppg_github}/ppg_firm_level_statistics.do"
 
 

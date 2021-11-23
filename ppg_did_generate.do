@@ -28,7 +28,7 @@
 use "${ppg_intermediate}/sicop_did", clear
 
 	* drop the treatment groups variables defined on bid-level
-drop reps single_change never_change mutiple_change
+drop reps single_change never_change multiple_change
 
 ***********************************************************************
 * 	PART 1:  identify the different treatment groups 			
@@ -235,7 +235,7 @@ bysort firmid (firm_occurence): replace time_to_treat = firm_occurence - `value_
 order time_to_treat, a(firm_occurence)
 format %5.0g time_to_treat
 
-
+drop `value_before' `treat_value_before1' `control_value_before1' `control_value_before2' `treat_value_before2' `gender_change_count' `fonly' `monly'
 ***********************************************************************
 * 	Save new as sicop did 			
 ***********************************************************************

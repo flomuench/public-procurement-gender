@@ -58,4 +58,5 @@ format %5.0g firmid firm_occurence
 ***********************************************************************
 * 	Save new as sicop did 			
 ***********************************************************************
+cd "$ppg_intermediate"
 save "sicop_did", replace	

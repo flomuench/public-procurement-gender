@@ -84,24 +84,6 @@ replace genderfo = 1 if persona_encargada_proveedor == "kenny granados hodgson"
 ***********************************************************************
 * 	PART 5:  Correct spelling of firm representatives
 ***********************************************************************
-	* redo some basic cleaning
-		* sort & format
-sort firmid persona_encargada_proveedor
-format %30s nombre_proveedor persona_encargada_proveedor
-
-		* gen variable to check whether less unique values of firm representation
-bysort persona_encargada_proveedor: gen oldn = _N
-codebook oldn
-			* suggest 692 rep names
-		* lower, remove trailing blanks
-local person persona_encargada_proveedor
-replace `person' = stritrim(strtrim(lower(`person')))
-tempvar newn
-bysort `person': gen `newn' = _N
-codebook `newn'
-			* still 692 firm reps despite 2944 changes
-
-	
 	* export rep-firm combinations to identify obs that need to be changed
 /*
 preserve
@@ -459,9 +441,6 @@ replace persona_encargada_proveedor = "carlos moreno" if persona_encargada_prove
 replace persona_encargada_proveedor = "arturo monge" if persona_encargada_proveedor == "jorge arturo monge salazar"
 replace persona_encargada_proveedor = "nikolay gandev" if persona_encargada_proveedor == "nikolay dobrev gandev georgieva"
 replace persona_encargada_proveedor = "ricardo amador cespedes" if persona_encargada_proveedor == "ricardo amador leon"
-}
-
-* still to code
 replace persona_encargada_proveedor = "kattia selley gonzalez" if persona_encargada_proveedor == "kattia sellet gonzalez"
 replace persona_encargada_proveedor = "jose hernan acuña cervantes" if persona_encargada_proveedor == "jose hernan acuÑa cervantes"
 replace persona_encargada_proveedor = "jose mariano alpizar arredondo" if persona_encargada_proveedor == "mariano alpizar arredondo"
@@ -490,44 +469,10 @@ replace persona_encargada_proveedor = "mariano miranda perez" if persona_encarga
 replace persona_encargada_proveedor = "carlos gerardo garcia araya" if persona_encargada_proveedor == "carlos garcia araya"
 replace persona_encargada_proveedor = "samuel bermudez ureña" if persona_encargada_proveedor == "samuel bermudez ureÑa"
 replace persona_encargada_proveedor = "jennifer gonzales amador" if persona_encargada_proveedor == "jennifer gonzalez amador"
+}
 
-* to see the different representative names per firm (sometimes better to use "tab" if firm has many representatives)
-codebook persona_encargada_proveedor if firmid == 4746
-
-tempvar newn
-bysort `person': gen `newn' = _N
-codebook `newn'
-
-codebook persona_encargada_proveedor
-			* 9994 unique values vs 10193 initially
 	
-***** deep clean the remaining strings
-		* eyeball the data
-			/* 
-examples of misspellings:
-		* case type 1: parts of the name forgotten
-firmid = 40 natalia de los angeles campos rojas vs natalia campos rojas
-firmid = 137 jeannette patricia ferencz mainemer vs. jeannette ferencz
-firmid = 210 manuel antonio valverde huertas vs manuel valverde huertas
-firmid = 230 erika maria espinoza ramirez vs erka maria espinoa ramirez
-firmid = 276 nikolay dobrev gandev georgieva vs nikolay gandev
-firmid = 289 brayner carvajal prado vs bryan carvajal prado
-firmid = 400 esteban
-firmid = 467 alvaro
-firmid = 486 alicia
-firmid = 573
-firmid = 625
-...
-firmid = 8587 walter
-firmid = 8628 katherine
-firmid = 8660 denis + adrian
 
-		* case type 2: special characters
-firmid = 400 cesar andrey quesada ortega vs. césar andrey quesada ortega
-firmid = 480 eladio bolaÑos villanea vs. eladio bolaños villanea
-firmid = 581
-			
-			*/
 
 ***********************************************************************
 * 	PART 4:  Convert string to numerical variables	  			
