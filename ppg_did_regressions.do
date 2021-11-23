@@ -29,10 +29,7 @@ use "${ppg_intermediate}/sicop_did", clear
 cd "$ppg_regression_tables"
 
 	* set panel data
-xtset firmid firm_occurence
-
-	*
-
+xtset firmid firm_occurence, delta(1)
 
 ***********************************************************************
 * 	PART 2: multivariate regression
