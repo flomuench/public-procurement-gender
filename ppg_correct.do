@@ -475,7 +475,7 @@ replace persona_encargada_proveedor = "jennifer gonzales amador" if persona_enca
 
 
 ***********************************************************************
-* 	PART 4:  Convert string to numerical variables	  			
+* 	PART 6:  Convert string to numerical variables	  			
 ***********************************************************************
 /*foreach x of global numvarc {
 destring `x', replace
@@ -484,7 +484,17 @@ format `x' %25.0fc
 */
 
 ***********************************************************************
+* 	PART 7:  Code missing gender for procurement officials	  			
+***********************************************************************
+preserve
+keep if female_po == .
+contract nombre_comprador female_po
+cd "$ppg_intermediate"
+export excel missing_po_gender, firstrow(var) replace
+restore
+
+
+***********************************************************************
 * 	Save the changes made to the data		  			
 ***********************************************************************
-
 save "sicop_replicable", replace

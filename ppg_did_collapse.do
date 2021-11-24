@@ -51,6 +51,7 @@ drop if dup > 1 & dup < .
 ***********************************************************************
 * 	PART 2:  	create firm level number of occurence variable	  			
 ***********************************************************************
+drop firm_occurence
 sort firmid date_adjudicacion numero_procedimiento partida linea
 by firmid: gen firm_occurence = _n, a(firmid)
 format %5.0g firmid firm_occurence

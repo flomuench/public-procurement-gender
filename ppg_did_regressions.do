@@ -30,6 +30,7 @@ cd "$ppg_regression_tables"
 
 	* set panel data
 xtset firmid firm_occurence, delta(1)
+	/* requires capture drop due to some mistake */
 
 ***********************************************************************
 * 	PART 2: multivariate regression
@@ -38,10 +39,20 @@ xtset firmid firm_occurence, delta(1)
 		* occurence fixed effects (year fixed effects/dummies already included --> general time trend)
 		* firm fixed effects
 		* control variables for ith occurence
+/* problèmes
+related to firmid:
+- 
+related to firm_occurence: 
+- histogram firm_occurence , sum firm_occurence, d --> 
+
+
+how many firms are dropped? Should I just focus on firms where gender changed? Drop firm controls
+
+*/
 preserve 
 sum firm_occurence, d
-keep if firm_occurence < r(p95) 
-xtlogit winner i.female_firm##i.female_po i.firm_occurence $process_controls $firm_controls, fe vce(boot, reps(10))
+keep if firm_occurence <= 50 & firm_occurence >= 10
+logit winner i.female_firm##i.female_po i.firm_occurence i.firmid $process_controls, vce(robust)
 margins i.female_firm##i.female_po, post
 estimates store predictedprob_mv_did, title("Predicted probabilities")
 coefplot predictedprob_mv_did, drop(_cons) xline(0) ///
@@ -63,6 +74,7 @@ quietly margins arrest, at(firm_occurence=(1(5)160)) /* 700 ~ 75th percentile, 1
 marginsplot, recast(line) noci title("Winning a public contract, Predictive probability") xtitle("nth bid") ytitle("Pr(Winning = 1)") plot1opts(lcolor(black)) plot2opts(lcolor(gs6) lpattern("--")) legend(on order(1 "female firm" 0 "male firm")) name(learning_gender)
 graph export learning_gender.png, replace
 restore
+
 ***********************************************************************
 * 	PART 3: define & set the event window
 ***********************************************************************	

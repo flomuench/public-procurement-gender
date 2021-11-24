@@ -119,5 +119,4 @@ codebook firmid if multiple_change == 1
 ***********************************************************************
 * 	Save the changes made to the data		  			
 ***********************************************************************
-
 save "sicop_replicable", replace

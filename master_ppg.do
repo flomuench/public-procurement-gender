@@ -33,7 +33,7 @@ qui cap log c
 *net install http://www.stata.com/users/kcrow/tab2docx
 *ssc install betterbar 
 *ssc install xtable
-ssc install coefplot
+*ssc install coefplot
 	* define graph scheme for visual outputs
 set scheme plotplain
 
@@ -145,10 +145,10 @@ if (0) do "${ppg_github}/ppg_multivariate_regression.do"
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/
 	* correct, collapse data set
-if (0) do "${ppg_github}/ppg_did_collapse.do"
+if (1) do "${ppg_github}/ppg_did_collapse.do"
 
 	* generate variables/identify treatment groups
-if (0) do "${ppg_github}/ppg_did_generate.do"
+if (1) do "${ppg_github}/ppg_did_generate.do"
 
 	* regression analysis
 if (0) do "${ppg_github}/ppg_did_regresssions.do"
