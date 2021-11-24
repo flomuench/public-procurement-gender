@@ -34,6 +34,7 @@ qui cap log c
 *ssc install betterbar 
 *ssc install xtable
 *ssc install coefplot
+*ssc install outreg2
 	* define graph scheme for visual outputs
 set scheme plotplain
 
@@ -64,6 +65,9 @@ global ppg_figures = "${ppg_output}/figures"
 global ppg_regression_tables = "${ppg_output}/regression-tables"
 global ppg_descriptive_statistics = "${ppg_output}/descriptive-statistics"
 	
+			* within outputs
+global ppg_learning = "${ppg_regression_tables}/learning effects"
+		
 		* globals for regression tables
 global process_controls "i.tipo ratio_firmpo_fm year i.institution_type number_competitors i.sector"
 global firm_controls "i.firm_size firm_age_ca i.firm_location" /*firm capital not used bc collinearity */

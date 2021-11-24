@@ -41,7 +41,7 @@ xtset firmid firm_occurence, delta(1)
 		* control variables for ith occurence
 /* problèmes
 related to firmid:
-- 
+- drops all the firms that always won or lost as dummy for these firms perfectly predicts outcome
 related to firm_occurence: 
 - histogram firm_occurence , sum firm_occurence, d --> 
 
@@ -49,6 +49,8 @@ related to firm_occurence:
 how many firms are dropped? Should I just focus on firms where gender changed? Drop firm controls
 
 */
+******************* Replication multivariate analysis with panel data/one firm-process obs
+	* attempt 1: replication with xtlogit
 preserve 
 sum firm_occurence, d
 keep if firm_occurence <= 50 & firm_occurence >= 10
@@ -63,18 +65,76 @@ coefplot predictedprob_mv_did, drop(_cons) xline(0) ///
 	note("N = 707,717", size(small))
 gr export predicted_probabilities_mv_did.png, replace
 restore
+		
+		* simple, pooled logit model
+logit winner i.female_firm##i.female_po $firm_controls $process_controls, vce(robust)
+		* logit model with one way occurence/time fixed effects
+logit winner i.female_firm##i.female_po i.firm_occurence $firm_controls $process_controls, vce(robust)	
+		* logit model with one way firm fixed effects
+logit winner i.female_firm##i.female_po i.firmid $firm_controls $process_controls, vce(robust)
 
+********************** Learning
 
 	* marginsplot to calculate a learning effect differential by gender
+		* with firm & period fixed effects
+cd "$ppg_learning"
 preserve 
+drop if never_change == 1
+keep if firm_occurence <= 50 & firm_occurence >= 10
 sum firm_occurence, d
-keep if firm_occurence <= r(p50)
-xtlogit winner i.female_firm##i.female_po i.firm_occurence $process_controls $firm_controls, fe vce(boot, reps(10))
-quietly margins arrest, at(firm_occurence=(1(5)160)) /* 700 ~ 75th percentile, 160 ~ median */
-marginsplot, recast(line) noci title("Winning a public contract, Predictive probability") xtitle("nth bid") ytitle("Pr(Winning = 1)") plot1opts(lcolor(black)) plot2opts(lcolor(gs6) lpattern("--")) legend(on order(1 "female firm" 0 "male firm")) name(learning_gender)
-graph export learning_gender.png, replace
+logit winner i.female_firm##i.female_po i.firm_occurence i.firmid $process_controls, vce(robust)
+margins female_firm, at(firm_occurence = (10(1)50)) post /* 700 ~ 75th percentile, 160 ~ median */
+marginsplot, recast(line) noci title("Winning a public contract, Predictive probability") xtitle("nth bid") ytitle("Pr(Winning = 1)") plot1opts(lcolor(black)) plot2opts(lcolor(gs6) lpattern("--")) legend(on order(1 "female firm" 0 "male firm")) name(learning_gender1, replace)
+graph export learning_gender1.png, replace
 restore
 
+		* without firm but only period fixed effects
+			* only gender effect for all firms
+
+
+
+
+preserve 
+keep if firm_occurence <= 50 & firm_occurence >= 10 
+sum firm_occurence, d
+logit winner i.female_firm##i.female_po i.firm_occurence $firm_controls $process_controls, vce(robust)
+margins female_firm, at(firm_occurence = (10(1)50)) post /* 700 ~ 75th percentile, 160 ~ median */
+outreg2 using learning_tfe_all, excel replace
+marginsplot, recast(line) noci title("Winning a public contract, Predictive probability") xtitle("nth bid") ytitle("Pr(Winning = 1)") plot1opts(lcolor(black)) plot2opts(lcolor(gs6) lpattern("--")) legend(on order(1 "female firm" 0 "male firm")) name(learning_gender2, replace)
+graph export learning_tfe_all.png, replace
+restore
+			* only gender effect for all firms excluding firms with no change in ceo
+preserve 
+drop if never_change == 1
+keep if firm_occurence <= 50 & firm_occurence >= 10 /* 21, 263 obs in regression */
+sum firm_occurence, d
+logit winner i.female_firm##i.female_po i.firm_occurence $firm_controls $process_controls, vce(robust)
+margins female_firm, at(firm_occurence = (10(1)50)) post /* 700 ~ 75th percentile, 160 ~ median */
+marginsplot, recast(line) noci title("Winning a public contract, Predictive probability") xtitle("nth bid") ytitle("Pr(Winning = 1)") plot1opts(lcolor(black)) plot2opts(lcolor(gs6) lpattern("--")) legend(on order(1 "female firm" 0 "male firm")) name(learning_gender2, replace)
+graph export learning_gender2.png, replace
+restore
+			* only gender effect for all firms 
+preserve 
+keep if single_change == 1
+keep if firm_occurence <= 50 & firm_occurence >= 10  
+sum firm_occurence, d
+logit winner i.female_firm##i.female_po i.firm_occurence $firm_controls $process_controls, vce(robust)
+margins female_firm, at(firm_occurence = (10(1)50)) post /* 700 ~ 75th percentile, 160 ~ median */
+marginsplot, recast(line) noci title("Winning a public contract, Predictive probability") xtitle("nth bid") ytitle("Pr(Winning = 1)") plot1opts(lcolor(black)) plot2opts(lcolor(gs6) lpattern("--")) legend(on order(1 "female firm" 0 "male firm")) name(learning_gender2, replace)
+graph export learning_gender2.png, replace
+restore
+			
+			* interaction effect between gender firm rep and gender PO
+preserve 
+drop if never_change == 1
+keep if firm_occurence <= 50 & firm_occurence >= 10
+sum firm_occurence, d
+logit winner i.female_firm##i.female_po i.firm_occurence $firm_controls $process_controls, vce(robust)
+margins female_firm, at(firm_occurence = (10(1)50)) post /* 700 ~ 75th percentile, 160 ~ median */
+marginsplot, recast(line) noci title("Winning a public contract, Predictive probability") xtitle("nth bid") ytitle("Pr(Winning = 1)") plot1opts(lcolor(black)) plot2opts(lcolor(gs6) lpattern("--")) legend(on order(1 "female firm" 0 "male firm")) name(learning_gender2, replace)
+graph export learning_gender2.png, replace
+restore
+			
 ***********************************************************************
 * 	PART 3: define & set the event window
 ***********************************************************************	
@@ -116,8 +176,9 @@ twoway  (histogram nttt10 if nttt10 <= 20 & nttt10 > = 0 & m2f == 1, width(1) fr
 *graph export lags_leaps_around_gender_change_process_level_m2f_10.png, replace
 
 ***********************************************************************
-* 	PART 2: estimate the coef, se & visualise them
+* 	PART 3: estimate the coef, se & visualise them
 ***********************************************************************	
+* predicted probabilities
 	* only keep observations within the event window
 preserve 
 drop if nttt10<0
@@ -184,6 +245,64 @@ twoway (sc coef_treat coef_control time_to_treat, connect(line) connect(line)) /
 	title("{bf: Event study difference-in-difference}") ///
 	subtitle("{it:Male-to-female vs. male to male}") ///
 	ytitle("Predicted probability to win a public contract")
+*graph export event-study-diff-in-diff_10_exp.png, replace
+	
+restore
+
+*************************** Marginal probabilities
+	* set window size & shift factor
+gen nttt10 = time_to_treat + 10
+lab var nttt10 "normalised time to treatment, +/- 10 window"
+
+/*gen nttt50 = time_to_treat + 50
+lab var nttt50 "normalised time to treatment, +/- 10 window" */
+	* only keep observations within the event window
+preserve 
+drop if nttt10<0
+	
+	* run the diff-in-diff regression around the event window 
+logit winner i.m2f##ib10.nttt10 if nttt10 <= 20 & nttt10 > 0, vce(robust)
+*margins, dydx(m2f) at(nttt10 = 1(1)20) post
+*margins m2f, at(nttt10 = 1(1)20) post
+matrix list e(b)
+	
+	* create empty variables for coefficients, standard errors, & confidence intervals
+gen coef = .
+gen se = .
+
+	* loop to list the coefficients for each process lag & leap
+forvalues x = 1(1)20 {
+	replace coef = _b[1.m2f#`x'o.nttt10] if nttt10 == `x' /* but this gener */
+	replace se   = _se[1.m2f#`x'o.nttt10] if nttt10 == `x'
+	}
+	
+	* create ci intervals
+gen ci_top = coef + 1.96*se
+gen ci_bottom = coef - 1.96*se
+
+	
+	* keep only
+keep time_to_treat coef se ci_*
+duplicates drop 
+sort time_to_treat
+
+	* create a scatterplot of coefficients with confidence intervals
+keep if time_to_treat <= 10 & time_to_treat > = - 10
+
+sum ci_top
+local top_range = r(max)
+sum ci_bottom
+local bottom_range = r(min)
+
+
+twoway (sc coef time_to_treat, connect(line)) ///
+	(rcap ci_top ci_bottom time_to_treat)	///
+	(function y = 0, range(time_to_treat)) ///
+	(function y = 0, range(`bottom_range' `top_range') horiz), ///
+	xtitle("Time to Treatment") caption("95% Confidence Intervals Shown") ///
+	title("{bf: Event study difference-in-difference}") ///
+	subtitle("{it:Male-to-female vs. male to male}") ///
+	ytitle("Average marginal probability to win a public contract")
 *graph export event-study-diff-in-diff_10_exp.png, replace
 	
 restore

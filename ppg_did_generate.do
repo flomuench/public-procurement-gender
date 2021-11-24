@@ -235,10 +235,11 @@ bysort firmid (firm_occurence): replace time_to_treat = firm_occurence - `value_
 order time_to_treat, a(firm_occurence)
 format %5.0g time_to_treat
 
-drop `value_before' `treat_value_before1' `control_value_before1' `control_value_before2' `treat_value_before2' `gender_change_count' `fonly' `monly'
 ***********************************************************************
 * 	Save new as sicop did 			
 ***********************************************************************
+drop `value_before' `treat_value_before1' `control_value_before1' `control_value_before2' `treat_value_before2' `gender_change_count' `fonly' `monly'
+
 save "sicop_did", replace	
 
 
