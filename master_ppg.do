@@ -65,9 +65,10 @@ global ppg_figures = "${ppg_output}/figures"
 global ppg_regression_tables = "${ppg_output}/regression-tables"
 global ppg_descriptive_statistics = "${ppg_output}/descriptive-statistics"
 	
-			* within outputs
+			* within outputs/regression-tables
 global ppg_learning = "${ppg_regression_tables}/learning effects"
 global ppg_event = "${ppg_regression_tables}/event study did"
+global ppg_pooled = "${ppg_regression_tables}/pooled multivariate regression"
 		
 		* globals for regression tables
 global process_controls "i.tipo ratio_firmpo_fm year i.institution_type number_competitors i.sector"

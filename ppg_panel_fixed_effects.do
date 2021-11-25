@@ -35,6 +35,21 @@ xtset firmid firm_occurence, delta(1)
 ***********************************************************************
 * 	PART 3: estimate the coef, se & visualise them
 ***********************************************************************
+	* replicate mv regression but add
+		* occurence fixed effects (year fixed effects/dummies already included --> general time trend)
+		* firm fixed effects
+		* control variables for ith occurence
+/* problèmes
+related to firmid:
+- drops all the firms that always won or lost as dummy for these firms perfectly predicts outcome
+related to firm_occurence: 
+- histogram firm_occurence , sum firm_occurence, d --> 
+
+
+how many firms are dropped? Should I just focus on firms where gender changed? Drop firm controls
+
+*/
+
 	* attempt 1: replication with xtlogit
 preserve 
 sum firm_occurence, d
