@@ -67,6 +67,7 @@ global ppg_descriptive_statistics = "${ppg_output}/descriptive-statistics"
 	
 			* within outputs
 global ppg_learning = "${ppg_regression_tables}/learning effects"
+global ppg_event = "${ppg_regression_tables}/event study did"
 		
 		* globals for regression tables
 global process_controls "i.tipo ratio_firmpo_fm year i.institution_type number_competitors i.sector"
@@ -160,3 +161,11 @@ if (0) do "${ppg_github}/ppg_did_regresssions.do"
 	* visualisations
 if (0) do "${ppg_github}/ppg_did_visualisations.do"
 
+
+/* --------------------------------------------------------------------
+	PART 5.3.: Panel one and two way fixed effects approach
+	Requires: sicop_replicable
+	Creates:  sicop_firm
+----------------------------------------------------------------------*/
+	* 
+if (0) do "${ppg_github}/ppg_panel_fixed_effects.do"

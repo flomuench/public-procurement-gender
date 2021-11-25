@@ -33,7 +33,7 @@ xtset firmid firm_occurence, delta(1)
 	/* requires capture drop due to some mistake */
 
 ***********************************************************************
-* 	PART 2: multivariate regression
+* 	PART 2: pooled bid level multivariate regression
 ***********************************************************************	
 	* replicate mv regression but add
 		* occurence fixed effects (year fixed effects/dummies already included --> general time trend)
@@ -49,31 +49,15 @@ related to firm_occurence:
 how many firms are dropped? Should I just focus on firms where gender changed? Drop firm controls
 
 */
-******************* Replication multivariate analysis with panel data/one firm-process obs
-	* attempt 1: replication with xtlogit
-preserve 
-sum firm_occurence, d
-keep if firm_occurence <= 50 & firm_occurence >= 10
-logit winner i.female_firm##i.female_po i.firm_occurence i.firmid $process_controls, vce(robust)
-margins i.female_firm##i.female_po, post
-estimates store predictedprob_mv_did, title("Predicted probabilities")
-coefplot predictedprob_mv_did, drop(_cons) xline(0) ///
-	xtitle("Predicted probability of winning") xlab(0.2(0.01)0.3) ///
-	graphr(color(white)) bgcol(white) plotr(color(white)) ///
-	title("{bf:Predicted probabilities of winning a public contract}") ///
-	subtitle("Robustness check 3: Two-way fixed effects vs. pooled", size(vsmall)) ///
-	note("N = 707,717", size(small))
-gr export predicted_probabilities_mv_did.png, replace
-restore
-		
-		* simple, pooled logit model
-logit winner i.female_firm##i.female_po $firm_controls $process_controls, vce(robust)
-		* logit model with one way occurence/time fixed effects
-logit winner i.female_firm##i.female_po i.firm_occurence $firm_controls $process_controls, vce(robust)	
-		* logit model with one way firm fixed effects
-logit winner i.female_firm##i.female_po i.firmid $firm_controls $process_controls, vce(robust)
+
+***********************************************************************
+* 	PART 2: pooled bid level multivariate regression
+***********************************************************************	
 
 ********************** Learning
+twoway (histogram firm_occurence if female_firm == 1 & firm_occurence < 1000, freq color(red%70)) ///
+	(histogram firm_occurence if female_firm == 0 & firm_occurence < 1000, freq color(blue%30)), ///
+	legend(order(1 "Female" 2 "Male" )) xtitle("number of times participated") ytitle("number of observations")
 
 	* marginsplot to calculate a learning effect differential by gender
 		* with firm & period fixed effects
@@ -147,11 +131,10 @@ restore
 *egen shift_factor = min(time_to_treat) if gender_change_single == 1, by(firmid)
 	
 	* set window size & shift factor
-gen nttt10 = time_to_treat + 10
-lab var nttt10 "normalised time to treatment, +/- 10 window"
-
-gen nttt50 = time_to_treat + 50
-lab var nttt50 "normalised time to treatment, +/- 10 window"
+foreach t of num 10 25 50 {
+gen nttt`t' = time_to_treat + `t'
+lab var nttt`t' "normalised time to treatment, +/- `t' window"
+}
 	
 	* visualise number of observations per process around change
 twoway  (histogram nttt50 if nttt50 <= 100 & nttt50 > = 0 & m2f == 1, width(1) frequency color(maroon%30)) ///
@@ -176,134 +159,234 @@ twoway  (histogram nttt10 if nttt10 <= 20 & nttt10 > = 0 & m2f == 1, width(1) fr
 *graph export lags_leaps_around_gender_change_process_level_m2f_10.png, replace
 
 ***********************************************************************
-* 	PART 3: estimate the coef, se & visualise them
+* 	PART 3: Event study DiD predicted probabilities
 ***********************************************************************	
-* predicted probabilities
 	* only keep observations within the event window
-preserve 
-drop if nttt10<0
-	
-	* run the diff-in-diff regression around the event window 
-logit winner i.m2f##ib20.nttt10 if nttt10 <= 20 & nttt10 > 0, vce(robust)
-margins  i.m2f##ib20.nttt10, post
-matrix list e(b)
-	
-	* create empty variables for coefficients, standard errors, & confidence intervals
-gen coef_treat = .
-gen coef_control = .
-gen se = .
+foreach t of num 10 25 50 {
+	preserve 
+	drop if nttt`t'<0
+	local wmax = 2*`t'
+		
+		* run the diff-in-diff regression around the event window 
+	logit winner i.m2f##ib`wmax'.nttt`t' if nttt`t' <= `wmax' & nttt`t' > 0, vce(robust)
+	margins i.m2f##ib`wmax'.nttt`t', post
+	cd "$ppg_event"
+	outreg2 using event_predictedprob`wmax', excel replace
+	matrix list e(b)
+		
+		* create empty variables for coefficients, standard errors, & confidence intervals
+	gen coef_m2f = .
+	gen coef_m2m = .
+	gen se_m2f = .
+	gen se_m2m = .
+
 
 	* loop to list the coefficients for each process lag & leap
-forvalues x = 1(1)20 {
-	replace coef_treat = _b[1.m2f#`x'o.nttt10] if nttt10 == `x' /* but this gener */
-	replace coef_control = _b[0.m2f#`x'o.nttt10] if nttt10 == `x' 
-	replace se   = _se[1.m2f#`x'o.nttt10] if nttt10 == `x'
+	forvalues x = 1(1) `wmax' {
+		replace coef_m2f = _b[1.m2f#`x'o.nttt`t'] if nttt`t' == `x' /* but this gener */
+		replace coef_m2m = _b[0.m2f#`x'o.nttt`t'] if nttt`t' == `x' 
+		replace se_m2f   = _se[1.m2f#`x'o.nttt`t'] if nttt`t' == `x'
+		replace se_m2m   = _se[0.m2f#`x'o.nttt`t'] if nttt`t' == `x'
+
 	}
 	
-	* create ci intervals
-gen ci_top_treat = coef_treat + 1.96*se
-gen ci_bottom_treat = coef_treat - 1.96*se
-gen ci_top_control = coef_control + 1.96*se
-gen ci_bottom_control = coef_control - 1.96*se
-	
-	* keep only
-keep time_to_treat coef_* se ci_*
-duplicates drop 
-sort time_to_treat
+		* create ci intervals
+	gen ci_top_m2f = coef_m2f + 1.96*se_m2f
+	gen ci_bottom_m2f = coef_m2f - 1.96*se_m2f
+	gen ci_top_m2m = coef_m2m + 1.96*se_m2m
+	gen ci_bottom_m2m = coef_m2m - 1.96*se_m2m
+		
+		* keep only
+	keep time_to_treat coef_* se_* ci_*
+	duplicates drop 
+	sort time_to_treat
 
 	* create a scatterplot of coefficients with confidence intervals
-keep if time_to_treat <= 10 & time_to_treat > = - 10
-local status "treat control"
-foreach x of local status {
-sum coef_`x' if time_to_treat < 0
-local mean_before_`x' = r(mean)
-sum coef_`x' if time_to_treat > 0
-local mean_after_`x' = r(mean)
-summ ci_top_`x'
-local top_range_`x' = r(max)
-summ ci_bottom_`x'
-local bottom_range_`x' = r(min)
+	keep if time_to_treat <= `t' & time_to_treat > = - `t'
+	local status "m2f m2m"
+	foreach x of local status {
+		sum ci_top_`x'
+		local top_range_`x' = r(max)
+		sum ci_bottom_`x'
+		local bottom_range_`x' = r(min)
+	}
+
+	twoway (sc coef_m2f time_to_treat, connect(line)) ///
+		(sc coef_m2m time_to_treat, connect(line)) ///
+		(rcap ci_top_m2f ci_bottom_m2f time_to_treat)	///
+		(rcap ci_top_m2m ci_bottom_m2m time_to_treat)	///
+		(function y = 0, range(`bottom_range_m2f' `top_range_m2f') horiz) ///
+		(function y = 0, range(`bottom_range_m2m' `top_range_m2m') horiz), ///
+		xtitle("Time to Treatment") caption("95% Confidence Intervals Shown") ///
+		title("{bf: Event study difference-in-difference}") ///
+		subtitle("{it:Male-to-female vs. male to male}") ///
+		ytitle("Predicted probability to win a public contract") ///
+		caption("Sample size = 6959 procurement processes of firms with a single change in their representatives gender. 85% are m2m.", size(vsmall))
+	graph export event_predictedprob`wmax'.png, replace
+		
+	restore
 }
-/*twoway (sc coef_treat coef_control time_to_treat, connect(line) connect(line)) ///
-	(rcap ci_top_treat ci_bottom_treat time_to_treat)	///
-	(rcap ci_top_control ci_bottom_control time_to_treat)	///
-	(function y = 0, range(time_to_treat)) ///
-	(function y = 0, range(`bottom_range_treat' `top_range_treat') horiz) ///
-	(function y = 0, range(`bottom_range_control' `top_range_control') horiz), ///
-	xtitle("Time to Treatment") caption("95% Confidence Intervals Shown") ///
-	title("{bf: Event study difference-in-difference}") ///
-	subtitle("{it:Male-to-female vs. male to male}") ///
-	ytitle("Predicted probability to win a public contract")
-graph export event-study-diff-in-diff_10.png, replace
-	*yline(`mean_before', lcolor(navy)) yline(`mean_after', lcolor(maroon))
-*/
-twoway (sc coef_treat coef_control time_to_treat, connect(line) connect(line)) ///
-	(rcap ci_top_treat ci_bottom_treat time_to_treat)	///
-	(rcap ci_top_control ci_bottom_control time_to_treat)	///
-	(function y = 0, range(time_to_treat)) ///
-	xtitle("Time to Treatment") caption("95% Confidence Intervals Shown") ///
-	title("{bf: Event study difference-in-difference}") ///
-	subtitle("{it:Male-to-female vs. male to male}") ///
-	ytitle("Predicted probability to win a public contract")
-*graph export event-study-diff-in-diff_10_exp.png, replace
-	
-restore
-
-*************************** Marginal probabilities
+***********************************************************************
+* 	PART : Event study DiD marginal probabilities at nttt
+***********************************************************************	
 	* set window size & shift factor
-gen nttt10 = time_to_treat + 10
-lab var nttt10 "normalised time to treatment, +/- 10 window"
+foreach t of num 10 25 50 {
+	gen nttt`t' = time_to_treat + `t'
+	lab var nttt`t' "normalised time to treatment, +/- `t' window"
 
-/*gen nttt50 = time_to_treat + 50
-lab var nttt50 "normalised time to treatment, +/- 10 window" */
+	/*gen nttt50 = time_to_treat + 50
+	lab var nttt50 "normalised time to treatment, +/- `t' window" */
+		* only keep observations within the event window
+	preserve 
+	drop if nttt`t'<0
+		
+		* run the diff-in-diff regression around the event window 
+	logit winner i.m2f##ib`t'.nttt`t' if nttt`t' <= `wmax' & nttt`t' > 0, vce(robust)
+	*margins, dydx(m2f) at(nttt`t' = 1(1)`wmax') post
+	*margins m2f, at(nttt`t' = 1(1)`wmax') post
+	*margins i.m2f##ib`t'.nttt`t'
+	margins, dydx(m2f) at(nttt`t'=(1(1)`wmax')) post
+	cd "$ppg_event"
+	outreg2 using event_marginalprob`wmax', excel replace
+	matrix list e(b)
+
+		
+		* create empty variables for coefficients, standard errors, & confidence intervals
+	gen coef = .
+	gen se = .
+
+		* loop to list the coefficients for each process lag & leap
+	forvalues x = 1(1)`wmax' {
+		replace coef = _b[1.m2f:`x'._at] if nttt`t' == `x' /* but this gener */
+		replace se   = _se[1.m2f:`x'._at] if nttt`t' == `x'
+		}
+		
+		* create ci intervals
+	gen ci_top = coef + 1.96*se
+	gen ci_bottom = coef - 1.96*se
+
+		
+		* keep only
+	keep time_to_treat coef se ci_*
+	duplicates drop 
+	sort time_to_treat
+
+		* create a scatterplot of coefficients with confidence intervals
+	keep if time_to_treat <= `t' & time_to_treat > = - `t'
+
+	sum ci_top
+	local top_range = r(max)
+	sum ci_bottom
+	local bottom_range = r(min)
+
+
+	twoway (sc coef time_to_treat, connect(line)) ///
+		(rcap ci_top ci_bottom time_to_treat)	///
+		(function y = 0, range(time_to_treat)) ///
+		(function y = 0, range(`bottom_range' `top_range') horiz), ///
+		xtitle("Time to Treatment") caption("95% Confidence Intervals Shown") ///
+		title("{bf: Event study difference-in-difference}") ///
+		subtitle("{it:Male-to-female vs. male to male}") ///
+		ytitle("Average marginal probability to win a public contract")
+	graph export event_marginalprob`wmax'.png, replace
+		
+	restore
+}
+
+
+
+
+***********************************************************************
+* 	PART 3: Event study triple DiD predicted probabilities
+***********************************************************************	
 	* only keep observations within the event window
-preserve 
-drop if nttt10<0
-	
-	* run the diff-in-diff regression around the event window 
-logit winner i.m2f##ib10.nttt10 if nttt10 <= 20 & nttt10 > 0, vce(robust)
-*margins, dydx(m2f) at(nttt10 = 1(1)20) post
-*margins m2f, at(nttt10 = 1(1)20) post
-matrix list e(b)
-	
-	* create empty variables for coefficients, standard errors, & confidence intervals
-gen coef = .
-gen se = .
+*foreach t of num 10 25 50 {
+	preserve 
+	drop if nttt10<0
+		
+		* run the diff-in-diff regression around the event window 
+	logit winner i.m2f##female_po##ib20.nttt10 if nttt10 <= 20 & nttt10 > 0, vce(robust)
+	margins i.m2f##ib20.nttt10, post
+	cd "$ppg_event"
+	outreg2 using event_3D_predictedprob20, excel replace
+	matrix list e(b)
+		
+		* create empty variables for coefficients, standard errors, & confidence intervals
+local groups m2f m2m
+local officials fpo mpo
+foreach g of local groups {
+	foreach o of local officials {
+	gen coef_`g'`o' = .
+	gen se_`g'`o' = .
+		}
+}
 
 	* loop to list the coefficients for each process lag & leap
-forvalues x = 1(1)20 {
-	replace coef = _b[1.m2f#`x'o.nttt10] if nttt10 == `x' /* but this gener */
-	replace se   = _se[1.m2f#`x'o.nttt10] if nttt10 == `x'
+	forvalues x = 1(1)20 {
+	
+	replace coef_`g'`o' = _b[1.m2f#`x'o.nttt10] if nttt10 == `x' 
+
+		replace coef_m2f_fpo = _b[1.m2f#`x'o.nttt10] if nttt10 == `x' 
+		replace coef_m2f_mpo = _b[1.m2f#`x'o.nttt10] if nttt10 == `x'
+		
+		replace coef_m2m_fpo = _b[0.m2f#`x'o.nttt10] if nttt10 == `x' 
+		replace coef_m2m_mpo = _b[0.m2f#`x'o.nttt10] if nttt10 == `x' 
+
+		replace se_m2f_fpo   = _se[1.m2f#`x'o.nttt10] if nttt10 == `x'
+		replace se_m2f_mpo   = _se[1.m2f#`x'o.nttt10] if nttt10 == `x'
+
+		replace se_m2m_fpo   = _se[0.m2f#`x'o.nttt10] if nttt10 == `x'
+		replace se_m2m_mpo   = _se[0.m2f#`x'o.nttt10] if nttt10 == `x'
+
 	}
 	
-	* create ci intervals
-gen ci_top = coef + 1.96*se
-gen ci_bottom = coef - 1.96*se
-
-	
-	* keep only
-keep time_to_treat coef se ci_*
-duplicates drop 
-sort time_to_treat
+		* create ci intervals
+	gen ci_top_m2f = coef_m2f + 1.96*se_m2f
+	gen ci_bottom_m2f = coef_m2f - 1.96*se_m2f
+	gen ci_top_m2m = coef_m2m + 1.96*se_m2m
+	gen ci_bottom_m2m = coef_m2m - 1.96*se_m2m
+		
+		* keep only
+	keep time_to_treat coef_* se_* ci_*
+	duplicates drop 
+	sort time_to_treat
 
 	* create a scatterplot of coefficients with confidence intervals
-keep if time_to_treat <= 10 & time_to_treat > = - 10
+	keep if time_to_treat <= 10 & time_to_treat > = - 10
+	local status "m2f m2m"
+	foreach x of local status {
+		sum ci_top_`x'
+		local top_range_`x' = r(max)
+		sum ci_bottom_`x'
+		local bottom_range_`x' = r(min)
+	}
 
-sum ci_top
-local top_range = r(max)
-sum ci_bottom
-local bottom_range = r(min)
+	twoway (sc coef_m2f time_to_treat, connect(line)) ///
+		(sc coef_m2m time_to_treat, connect(line)) ///
+		(rcap ci_top_m2f ci_bottom_m2f time_to_treat)	///
+		(rcap ci_top_m2m ci_bottom_m2m time_to_treat)	///
+		(function y = 0, range(`bottom_range_m2f' `top_range_m2f') horiz) ///
+		(function y = 0, range(`bottom_range_m2m' `top_range_m2m') horiz), ///
+		xtitle("Time to Treatment") caption("95% Confidence Intervals Shown") ///
+		title("{bf: Event study difference-in-difference}") ///
+		subtitle("{it:Male-to-female vs. male to male}") ///
+		ytitle("Predicted probability to win a public contract") ///
+		caption("Sample size = 6959 procurement processes of firms with a single change in their representatives gender. 85% are m2m.", size(vsmall))
+	graph export event_3D_predictedprob10.png, replace
+		
+	restore
+*}
 
 
-twoway (sc coef time_to_treat, connect(line)) ///
-	(rcap ci_top ci_bottom time_to_treat)	///
-	(function y = 0, range(time_to_treat)) ///
-	(function y = 0, range(`bottom_range' `top_range') horiz), ///
-	xtitle("Time to Treatment") caption("95% Confidence Intervals Shown") ///
-	title("{bf: Event study difference-in-difference}") ///
-	subtitle("{it:Male-to-female vs. male to male}") ///
-	ytitle("Average marginal probability to win a public contract")
-*graph export event-study-diff-in-diff_10_exp.png, replace
-	
-restore
 
+
+**** Archive
+	gen coef_m2f = .
+	gen coef_m2m = .
+	gen coef_m2f = .
+	gen coef_m2m = .
+	gen se_m2f = .
+	gen se_m2m = .
+
+	gen se_m2f = .
+	gen se_m2m = .
