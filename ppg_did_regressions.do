@@ -259,8 +259,8 @@ local groups m2f m2m
 local officials fpo mpo
 foreach g of local groups {
 	foreach o of local officials {
-	gen coef_`g'`o' = .
-	gen se_`g'`o' = .
+	gen coef_`g'_`o' = .
+	gen se_`g'_`o' = .
 		}
 }
 
@@ -306,44 +306,47 @@ local groups m2f m2m
 local officials fpo mpo
 foreach g of local groups {
 	foreach o of local officials {
-	sum ci_top_`g'`o'
-	local top_range_`g'`o' = r(max)
-	sum ci_bottom_`g'`o'
-	local bottom_range_`g'`o' = r(min)
+	sum ci_top_`g'_`o'
+	local top_range_`g'_`o' = r(max)
+	sum ci_bottom_`g'_`o'
+	local bottom_range_`g'_`o' = r(min)
 	}	
 }
 	
 		* event study tripple DiD visualisation m2f vs. m2m under male PO
-	twoway (sc coef_m2f_mpo time_to_treat, connect(line)) ///
-		(sc coef_m2m_mpo time_to_treat, connect(line)) ///
-		(rcap ci_top_m2f_mpo ci_bottom_m2f_mpo time_to_treat)	///
-		(rcap ci_top_m2m_mpo ci_bottom_m2m_mpo time_to_treat)	///
+	twoway (sc coef_m2f_mpo time_to_treat, connect(line) lcolor(blue%50) lpattern(solid) legend(off)) ///
+		(sc coef_m2m_mpo time_to_treat, connect(line) lcolor(red%50) lpattern(dash) legend(off)) ///
+		(rcap ci_top_m2f_mpo ci_bottom_m2f_mpo time_to_treat, legend(off))	///
+		(rcap ci_top_m2m_mpo ci_bottom_m2m_mpo time_to_treat, legend(off))	///
 		(function y = 0, range(`bottom_range_m2f_mpo' `top_range_m2f_mpo') horiz) ///
 		(function y = 0, range(`bottom_range_m2m_mpo' `top_range_m2m_mpo') horiz), ///
 		xtitle("Time to Treatment") caption("95% Confidence Intervals Shown") ///
 		title("{bf: Under male procurement official}") ///
-		ytitle("Predicted probability to win a public contract") ///
-		caption("Sample size = 6959 procurement processes of firms with a single change in their representatives gender. 85% are m2m.", size(vsmall)) ///
-		name(3D_malePO_10)
+		ytitle("Predicted probability to win a public contract", size(small)) ///
+		name(D3_malePO_10, replace)
 	graph export event_3D_mpo_predictedprob10.png, replace
 	
 		* event study tripple DiD visualisation m2f vs. m2m under female PO
-	twoway (sc coef_m2f_fpo time_to_treat, connect(line)) ///
-		(sc coef_m2m_fpo time_to_treat, connect(line)) ///
-		(rcap ci_top_m2f_fpo ci_bottom_m2f_fpo time_to_treat)	///
-		(rcap ci_top_m2m_fpo ci_bottom_m2m_fpo time_to_treat)	///
+	twoway (sc coef_m2f_fpo time_to_treat, connect(line) lcolor(blue%50) lpattern(solid)) ///
+		(sc coef_m2m_fpo time_to_treat, connect(line) lcolor(red%50) lpattern(dash)) ///
+		(rcap ci_top_m2f_fpo ci_bottom_m2f_fpo time_to_treat, legend(off))	///
+		(rcap ci_top_m2m_fpo ci_bottom_m2m_fpo time_to_treat, legend(off))	///
 		(function y = 0, range(`bottom_range_m2f_fpo' `top_range_m2f_fpo') horiz) ///
 		(function y = 0, range(`bottom_range_m2m_fpo' `top_range_m2m_fpo') horiz), ///
 		xtitle("Time to Treatment") caption("95% Confidence Intervals Shown") ///
 		title("{bf: Under female procurement official}") ///
-		ytitle("Predicted probability to win a public contract") ///
-		caption("Sample size = 6959 procurement processes of firms with a single change in their representatives gender. 85% are m2m.", size(vsmall)) ///
-		name(3D_femalePO_10)
+		ytitle("Predicted probability to win a public contract", size(small)) ///
+		legend(order(1 "Male to female" 2 "Male to male")) ///
+		name(D3_femalePO_10, replace)
 	graph export event_3D_fpo_predictedprob10.png, replace
 
-	gr combine 3D_malePO_10 3D_femalePO_10, title("{bf: Event study triple difference-in-difference}" ///
-		subtitle("{it:Male-to-female vs. male to male}"
-
+	grc1leg D3_malePO_10 D3_femalePO_10, title("{bf: Event study triple difference-in-difference}") ///
+		subtitle("{it:Male-to-female vs. male to male}") ///
+		legendfrom(D3_femalePO_10) ///
+		ycommon xcommon ///
+		note("Sample size = 6959 procurement processes of firms with a single change in their representatives gender. 85% are m2m.", size(vsmall))
+		
+	gr export event_D3_pp10.png, replace
 	restore
 *}
 
@@ -418,7 +421,9 @@ restore
 
 
 **** Archive
-
+	/*gr combine D3_malePO_10 D3_femalePO_10, title("{bf: Event study triple difference-in-difference}") ///
+		subtitle("{it:Male-to-female vs. male to male}") ///
+		note("Sample size = 6959 procurement processes of firms with a single change in their representatives gender. 85% are m2m.", size(vsmall)) */
 
 
 	gen coef_m2f = .

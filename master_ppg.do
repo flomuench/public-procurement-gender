@@ -35,6 +35,7 @@ qui cap log c
 *ssc install xtable
 *ssc install coefplot
 *ssc install outreg2
+*net install grc1leg,from( http://www.stata.com/users/vwiggins/)	
 	* define graph scheme for visual outputs
 set scheme plotplain
 
