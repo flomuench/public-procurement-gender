@@ -14,7 +14,34 @@
 *	ID variable: 	process level id = id ; firm level id = firmid			  					  
 *	Requires: 	  								  
 *	Creates:  			                          
-*																	  
+*
+***********************************************************************
+* 	PART 1:  Average probability of winning a public contract 			
+***********************************************************************
+use "${ppg_intermediate}/sicop_replicable", clear
+cd "$ppg_unconprob"
+
+	* for all firms 
+logit winner, vce(robust)
+margins, post
+outreg2 using unconditional_probabilities, excel replace
+
+		/* 25% */
+		
+	* for male & female firms
+logit winner i.female_firm, vce(robust)
+margins i.female_firm, post
+outreg2 using unconditional_probabilities, excel append
+
+		/* 26.8% female firm, 23.3% male firm */
+		
+	* for male & female firms that never changed ceo
+logit winner i.female_firm if never_change == 1, vce(robust)
+margins i.female_firm, post
+outreg2 using unconditional_probabilities, excel append
+
+
+																	  
 ***********************************************************************
 * 	PART 1:  Effect of gender firm representative on wining public contract 			
 ***********************************************************************
