@@ -173,6 +173,12 @@ lab var m2f "m2f vs. m2m for single gender change"
 codebook firmid if m2f == 1
 order m2f, a(f2m)
 			* 92 firms, 1764 processes
+			
+			
+label def compliers 1 "m2f" 0 "m2m"
+label values m2f compliers
+label def defiers 1 "f2m" 0 "f2f"
+label values f2m defiers
 
 ***********************************************************************
 * 	PART 9:  Create a time to treat variable for control group	
@@ -229,11 +235,50 @@ replace `value_before' = `treat_value_before2' if f2m == 1 | m2f == 1
 			* post = 1: replace time_to_treat = firm_occurrence - value_before
 			* post = 0: replace time_to_treat = value_before - firm_occurence
 	
+
+
+***********************************************************************
+* 	PART 3:  Create a time to treat and normalised time to treat variable			
+***********************************************************************	
 	* generate time to treat variable
 gen time_to_treat = .
 bysort firmid (firm_occurence): replace time_to_treat = firm_occurence - `value_before'
 order time_to_treat, a(firm_occurence)
 format %5.0g time_to_treat
+
+	* normalise time to treat such that all values are positive
+foreach t of num 10 25 50 {
+gen nttt`t' = time_to_treat + `t'
+lab var nttt`t' "normalised time to treatment, +/- `t' window"
+}
+
+
+
+***********************************************************************
+* 	PART 3:  Create post variable			
+***********************************************************************	
+	* treatment group
+* idea: exploit the new m2f & f2m variables to create post variable for the treatment group
+	* for m2f firm, post = 1 if female_firm == 1
+	* for f2m firms, post = 1 if female_firm == 0
+foreach t of num 10 25 50 {
+gen post`t' = .
+	* m2f
+replace post`t' = 1 if m2f == 1 & nttt`t' > 0
+replace post`t' = 0 if m2f == 1 & nttt`t' < 0
+	* f2m
+replace post`t' = 1 if f2m == 1 & nttt`t' > 0
+replace post`t' = 0 if f2m == 1 & nttt`t' < 0
+	* m2m
+replace post`t' = 1 if m2m == 1 & nttt`t' > 0
+replace post`t' = 0 if m2m == 1 & nttt`t' < 0
+
+order post`t', a(m2f)
+format %5.0g post`t'
+}
+
+label def ab 1 "after" 0 "before"
+label values post* ab
 
 ***********************************************************************
 * 	Save new as sicop did 			
@@ -247,24 +292,8 @@ save "sicop_did", replace
 
 
 * archive
-/* 
-***********************************************************************
-* 	PART 3:  Create post variable			
-***********************************************************************	
-	* treatment group
-* idea: exploit the new m2f & f2m variables to create post variable for the treatment group
-	* for m2f firm, post = 1 if female_firm == 1
-	* for f2m firms, post = 1 if female_firm == 0
-/* gen post = .
-	*
-replace post = 1 if m2f == 1 & female_firm == 1
-replace post = 0 if m2f == 1 & female_firm == 0
-	*
-replace post = 1 if f2m == 1 & female_firm == 0
-replace post = 0 if f2m == 1 & female_firm == 1
-order post, a(m2f)
-format %5.0g post
-*/
+
+
 
 ***********************************************************************
 * 	PART 3:  Create a placebo treatment for the firms that did never change CEO			

@@ -63,9 +63,8 @@ coefplot pooled_switchers, drop(_cons) xline(0) ///
 	note("Sample size = 44,270 bids.", size(vsmall))
 gr export pooled_switchers.png, replace
 
-
 ***********************************************************************
-* 	PART 3: Visualising leaps and lags around the event window
+* 	PART 3: Event study DiD predicted probabilities of winning public contract
 ***********************************************************************	
 /* notes: 
 	* problem: stata does not allow negative factors
@@ -78,32 +77,7 @@ foreach t of num 10 25 50 {
 gen nttt`t' = time_to_treat + `t'
 lab var nttt`t' "normalised time to treatment, +/- `t' window"
 }
-	
-	* visualise number of observations per process around change
-twoway  (histogram nttt50 if nttt50 <= 100 & nttt50 > = 0 & m2f == 1, width(1) frequency color(maroon%30)) ///
-		(histogram nttt50 if nttt50 <= 100 & nttt50 > = 0 & m2f == 0, width(1) frequency color(navy%30)), ///
-			xline(50) ///
-			legend(order(1 "Male to female" 2 "Male to male")) ///
-			title("{bf:Lags and leaps around gender change of firm representative}") ///
-			subtitle("{it:Process-level by treatment and control group}") ///
-			xtitle("Time to treatment") xlabel(#10) ///
-			note("Bin width = 1. N = 39,876 processes out of which 1,761 male-to-female & 38,115 male-to-male.", size(vsmall)) ///
-			ylabel(0(50)500) ytitle("Total number of procurement processes")
-*graph export lags_leaps_around_gender_change_process_level_m2f_50.png, replace
-			
-twoway  (histogram nttt10 if nttt10 <= 20 & nttt10 > = 0 & m2f == 1, width(1) frequency color(maroon%30)) ///
-		(histogram nttt10 if nttt10 <= 20 & nttt10 > = 0 & m2f == 0, width(1) frequency color(navy%30)), ///
-			xline(20) ///
-			legend(order(1 "Male to female" 2 "Male to male")) ///
-			title("{bf:Lags and leaps around gender change of firm representative}") ///
-			subtitle("{it:Process-level by treatment and control group}") ///
-			xtitle("Time to treatment") xlabel(#10) ///
-			ylabel(0(50)500) ytitle("Total number of procurement processes")
-*graph export lags_leaps_around_gender_change_process_level_m2f_10.png, replace
 
-***********************************************************************
-* 	PART 3: Event study DiD predicted probabilities
-***********************************************************************	
 	* only keep observations within the event window
 foreach t of num 10 25 50 {
 	preserve 
@@ -170,7 +144,7 @@ foreach t of num 10 25 50 {
 	restore
 }
 ***********************************************************************
-* 	PART : Event study DiD marginal probabilities at nttt
+* 	PART : Event study DiD marginal probabilities at nttt of winning public contract
 ***********************************************************************	
 	* set window size & shift factor
 foreach t of num 10 25 50 {
@@ -240,7 +214,7 @@ foreach t of num 10 25 50 {
 
 
 ***********************************************************************
-* 	PART 3: Event study triple DiD predicted probabilities
+* 	PART 3: Event study triple DiD predicted probabilities of winning public contract
 ***********************************************************************	
 	* only keep observations within the event window
 *foreach t of num 10 25 50 {
@@ -349,6 +323,120 @@ foreach g of local groups {
 	gr export event_D3_pp10.png, replace
 	restore
 *}
+
+***********************************************************************
+* 	PART 4: Event study triple DiD AMOUNT WON IN BID
+***********************************************************************	
+	* only keep observations within the event window
+*foreach t of num 10 25 50 {
+	preserve 
+	drop if nttt10<0
+		
+		* run the diff-in-diff regression around the event window 
+	regress monto_crc i.m2f##female_po##ib20.nttt10 if nttt10 <= 20 & nttt10 > 0, vce(robust)
+	cd "$ppg_event"
+	outreg2 using event_3D_amount10, excel replace
+	matrix list e(b)
+		
+		* create empty variables for coefficients, standard errors, & confidence intervals
+local groups m2f m2m
+local officials fpo mpo
+foreach g of local groups {
+	foreach o of local officials {
+	gen coef_`g'_`o' = .
+	gen se_`g'_`o' = .
+		}
+}
+
+	* loop to list the coefficients for each process lag & leap
+	forvalues x = 1(1)20 {
+	
+		replace coef_m2f_fpo = _b[1.m2f#1.female_po#`x'o.nttt10] if nttt10 == `x' 
+		replace coef_m2f_mpo = _b[1.m2f#0.female_po#`x'o.nttt10] if nttt10 == `x'
+		
+		replace coef_m2m_fpo = _b[0.m2f#1.female_po#`x'o.nttt10] if nttt10 == `x' 
+		replace coef_m2m_mpo = _b[0.m2f#0.female_po#`x'o.nttt10] if nttt10 == `x' 
+
+		replace se_m2f_fpo   = _se[1.m2f#1.female_po#`x'o.nttt10] if nttt10 == `x'
+		replace se_m2f_mpo   = _se[1.m2f#0.female_po#`x'o.nttt10] if nttt10 == `x'
+
+		replace se_m2m_fpo   = _se[0.m2f#1.female_po#`x'o.nttt10] if nttt10 == `x'
+		replace se_m2m_mpo   = _se[0.m2f#0.female_po#`x'o.nttt10] if nttt10 == `x'
+
+	}
+	
+		* create ci intervals
+	gen ci_top_m2f_fpo = coef_m2f_fpo + 1.96*se_m2f_fpo
+	gen ci_bottom_m2f_fpo = coef_m2f_fpo - 1.96*se_m2f_fpo
+	
+	gen ci_top_m2f_mpo = coef_m2f_mpo + 1.96*se_m2f_mpo
+	gen ci_bottom_m2f_mpo = coef_m2f_mpo - 1.96*se_m2f_mpo
+	
+	gen ci_top_m2m_fpo = coef_m2m_fpo + 1.96*se_m2m_fpo
+	gen ci_bottom_m2m_fpo = coef_m2m_fpo - 1.96*se_m2m_fpo
+	
+	gen ci_top_m2m_mpo = coef_m2m_mpo + 1.96*se_m2m_mpo
+	gen ci_bottom_m2m_mpo = coef_m2m_mpo - 1.96*se_m2m_mpo
+		
+		* keep only
+	keep time_to_treat coef_* se_* ci_*
+	duplicates drop 
+	sort time_to_treat
+
+	* create a scatterplot of coefficients with confidence intervals
+	keep if time_to_treat <= 10 & time_to_treat > = - 10
+	
+local groups m2f m2m
+local officials fpo mpo
+foreach g of local groups {
+	foreach o of local officials {
+	sum ci_top_`g'_`o'
+	local top_range_`g'_`o' = r(max)
+	sum ci_bottom_`g'_`o'
+	local bottom_range_`g'_`o' = r(min)
+	}	
+}
+	
+		* event study tripple DiD visualisation m2f vs. m2m under male PO
+	twoway (sc coef_m2f_mpo time_to_treat, connect(line) lcolor(blue%50) lpattern(solid) legend(off)) ///
+		(sc coef_m2m_mpo time_to_treat, connect(line) lcolor(red%50) lpattern(dash) legend(off)) ///
+		(rcap ci_top_m2f_mpo ci_bottom_m2f_mpo time_to_treat, legend(off))	///
+		(rcap ci_top_m2m_mpo ci_bottom_m2m_mpo time_to_treat, legend(off))	///
+		(function y = 0, range(`bottom_range_m2f_mpo' `top_range_m2f_mpo') horiz) ///
+		(function y = 0, range(`bottom_range_m2m_mpo' `top_range_m2m_mpo') horiz), ///
+		xtitle("Time to Treatment") caption("95% Confidence Intervals Shown") ///
+		title("{bf: Under male procurement official}") ///
+		ytitle("Predicted probability to win a public contract", size(small)) ///
+		name(D3_malePO_10, replace)
+	graph export event_3D_mpo_predictedprob10.png, replace
+	
+		* event study tripple DiD visualisation m2f vs. m2m under female PO
+	twoway (sc coef_m2f_fpo time_to_treat, connect(line) lcolor(blue%50) lpattern(solid)) ///
+		(sc coef_m2m_fpo time_to_treat, connect(line) lcolor(red%50) lpattern(dash)) ///
+		(rcap ci_top_m2f_fpo ci_bottom_m2f_fpo time_to_treat, legend(off))	///
+		(rcap ci_top_m2m_fpo ci_bottom_m2m_fpo time_to_treat, legend(off))	///
+		(function y = 0, range(`bottom_range_m2f_fpo' `top_range_m2f_fpo') horiz) ///
+		(function y = 0, range(`bottom_range_m2m_fpo' `top_range_m2m_fpo') horiz), ///
+		xtitle("Time to Treatment") caption("95% Confidence Intervals Shown") ///
+		title("{bf: Under female procurement official}") ///
+		ytitle("Predicted probability to win a public contract", size(small)) ///
+		legend(order(1 "Male to female" 2 "Male to male")) ///
+		name(D3_femalePO_10, replace)
+	graph export event_3D_fpo_predictedprob10.png, replace
+
+	grc1leg D3_malePO_10 D3_femalePO_10, title("{bf: Event study triple difference-in-difference}") ///
+		subtitle("{it:Male-to-female vs. male to male}") ///
+		legendfrom(D3_femalePO_10) ///
+		ycommon xcommon ///
+		note("Sample size = 6959 procurement processes of firms with a single change in their representatives gender. 85% are m2m.", size(vsmall))
+		
+	gr export event_D3_pp10.png, replace
+	restore
+
+
+
+
+
 
 
 ***********************************************************************

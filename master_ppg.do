@@ -62,11 +62,18 @@ global ppg_raw = "${ppg_data}/raw"
 global ppg_intermediate "${ppg_data}/intermediate"
 			* outputs
 global ppg_output = "${ppg_gdrive}/Output"
+				
+				* within output
 global ppg_figures = "${ppg_output}/figures"
 global ppg_regression_tables = "${ppg_output}/regression-tables"
 global ppg_descriptive_statistics = "${ppg_output}/descriptive-statistics"
+			
+					* within figures
+global ppg_figures = "${ppg_figures}/balance tables"
+
 	
-			* within outputs/regression-tables
+	
+					* within regression-tables
 global ppg_learning = "${ppg_regression_tables}/learning effects"
 global ppg_event = "${ppg_regression_tables}/event study did"
 global ppg_pooled = "${ppg_regression_tables}/pooled multivariate regression"

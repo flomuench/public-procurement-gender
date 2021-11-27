@@ -32,7 +32,7 @@ cd "$ppg_figures"
 iebaltab age_registro-success_ratio, grpvar(female_firm) save(baltab_female_male) replace ///
 			 vce(robust) pttest rowvarlabels balmiss(mean) onerow stdev notecombine ///
 			 format(%12.2fc)
-
+			 
 kdensity success_ratio if female_firm == 1, ///
 	addplot(kdensity success_ratio if female_firm == 0)
 	
