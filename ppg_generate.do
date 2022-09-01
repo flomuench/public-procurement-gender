@@ -114,9 +114,28 @@ codebook firmid if never_change == 1
 gen multiple_change = (reps > 2 & reps <.)
 codebook firmid if multiple_change == 1
 				* 417 firms
+				
+***********************************************************************
+* 	PART 6:  Verify via text matching if change in reps not wrongly assigned due to misspellings	  			
+***********************************************************************
+
+egen rep_id = group(persona_encargada_proveedor)
+
+*egen firm_rep_id = group(firmid rep_id)
+*bys firmid (rep_id): gen firm_rep_id = _n
+
+*egen firm_rep_id = group(firmid rep_id)
+
+
+contract firmid rep_id persona_encargada_proveedor
+drop _freq
+bys firmid (rep_id): gen firm_rep_id = _n
+drop firm_rep_id
+reshape wide persona_encargada_proveedor, i(firmid) j(rep_id)
+
 
 
 ***********************************************************************
 * 	Save the changes made to the data		  			
 ***********************************************************************
-save "sicop_replicable", replace
+save "${ppg_final}/sicop_final", replace

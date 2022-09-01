@@ -27,8 +27,10 @@ set more off
 set graphics on /* switch off to on to display graphs */
 capture program drop zscore /* drops the program programname */
 qui cap log c
+set varabbrev off /* avoid wrong variable gets selected */
 
 	* install packages
+/*
 *ssc install blindschemes, replace
 *net install http://www.stata.com/users/kcrow/tab2docx
 *ssc install betterbar 
@@ -36,16 +38,32 @@ qui cap log c
 *ssc install coefplot
 *ssc install outreg2
 *net install grc1leg,from( http://www.stata.com/users/vwiggins/)	
+*/
+
 	* define graph scheme for visual outputs
 set scheme plotplain
+
+	* set seeds for replication
+set seed 01092022
+set sortseed 01092022 
 
 ***********************************************************************
 * 	PART 2: 	Prepare dynamic folder paths & globals			  	  *
 ***********************************************************************
 
 		* globals: dynamic folder paths
+/*
+if "`c(username)'" == "ASUS"{
+		global gdrive = "G:/Meine Ablage"
+}
+else{
+		global gdrive = "C:/Users/`c(username)'/Google Drive"
+}
+*/
+		
 if c(os) == "Windows" {
 	global ppg_gdrive = "C:/Users/`c(username)'/Google Drive/Public Procurement and Gender"
+	*global ppg_gdrive = "${gdrive}/Public Procurement and Gender"
 	global ppg_github = "C:/Users/`c(username)'/Documents/GitHub/public-procurement-gender"
 	global ppg_backup = "C:/Users/`c(username)'/Documents/backup-public-procurement-gender"
 }
@@ -60,25 +78,19 @@ else if c(os) == "MacOSX" {
 global ppg_data = "${ppg_gdrive}/Data/Yami_Flo"
 global ppg_raw = "${ppg_data}/raw"
 global ppg_intermediate "${ppg_data}/intermediate"
+global ppg_final "${ppg_data}/final"
+			
 			* outputs
 global ppg_output = "${ppg_gdrive}/Output"
-				
-				* within output
 global ppg_figures = "${ppg_output}/figures"
 global ppg_regression_tables = "${ppg_output}/regression-tables"
 global ppg_descriptive_statistics = "${ppg_output}/descriptive-statistics"
-			
-					* within figures
-global ppg_figures = "${ppg_figures}/balance tables"
-
-	
-	
-					* within regression-tables
+				
+			* within regression-tables
 global ppg_learning = "${ppg_regression_tables}/learning effects"
 global ppg_event = "${ppg_regression_tables}/event study did"
 global ppg_pooled = "${ppg_regression_tables}/pooled multivariate regression"
 global ppg_unconprob = "${ppg_regression_tables}/unconditional probabilities"
-
 
 
 		* globals for regression tables
@@ -86,20 +98,6 @@ global process_controls "i.tipo ratio_firmpo_fm year i.institution_type number_c
 global firm_controls "i.firm_size firm_age_ca i.firm_location" /*firm capital not used bc collinearity */
 		
 		
-		* globals for graphs
-/*global graph_opts title(, justification(left) color(black) span pos(11)) ///
-	graphregion(color(white)) ylab(,angle(0) nogrid notick) xscale(noline) yscale(noline) yline(0 , lc(black)) ///
-	xtit(,placement(left) justification(left)) legend(region(lc(none) fc(none)))
-*/
-		
-		* global for numerical variables*
-*global numvar ml_prix q393 q392 q391
-
-
-		* globals for other reponses categories
-*global not_know    = "77777777777777777"
-
-
 
 ***********************************************************************
 * 	PART 3: 	Run data cleaning & preparation do-files			  	
@@ -110,26 +108,22 @@ global firm_controls "i.firm_size firm_age_ca i.firm_location" /*firm capital no
 	Creates:  sicop_replicable
 ----------------------------------------------------------------------*/		
 if (1) do "${ppg_github}/ppg_clean.do"
-
-
 /* --------------------------------------------------------------------
 	PART 3.2: correct
 	Requires: sicop_replicable
 	Creates:  sicop_replicable
 ----------------------------------------------------------------------*/		
 if (1) do "${ppg_github}/ppg_correct.do"
-
 /* --------------------------------------------------------------------
 	PART 3.3: generate
 	Requires: sicop_replicable
-	Creates:  sicop_replicable
+	Creates:  sicop_final
 ----------------------------------------------------------------------*/		
 if (1) do "${ppg_github}/ppg_generate.do"
 
 ***********************************************************************
 * 	PART 4: 	Run descriptive statistics do files		  	
 ***********************************************************************
-
 /* --------------------------------------------------------------------
 	PART 4.1.: firm level statistics & balance table
 	Requires: sicop_replicable
@@ -144,7 +138,6 @@ if (0) do "${ppg_github}/ppg_collapse_firm_level.do"
 ----------------------------------------------------------------------*/
 if (0) do "${ppg_github}/ppg_firm_level_statistics.do"
 
-
 ***********************************************************************
 * 	PART 5: 	Regression analysis		  	
 ***********************************************************************
@@ -154,8 +147,6 @@ if (0) do "${ppg_github}/ppg_firm_level_statistics.do"
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/
 if (0) do "${ppg_github}/ppg_multivariate_regression.do"
-
-
 /* --------------------------------------------------------------------
 	PART 5.2.: event study with difference-in-difference approach
 	Requires: sicop_replicable
@@ -179,5 +170,4 @@ if (0) do "${ppg_github}/ppg_did_visualisations.do"
 	Requires: sicop_replicable
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/
-	* 
 if (0) do "${ppg_github}/ppg_panel_fixed_effects.do"

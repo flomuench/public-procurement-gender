@@ -40,14 +40,14 @@ drop firm_size firm_founded firm_registration firm_registro date_ca date_pu ///
 
 ds, has(type string) 
 local strvars "`r(varlist)'"
-format %15s `strvars'
-format %25s numero_procedimiento
-format %5s partida
+format %-15s `strvars'
+format %-25s numero_procedimiento persona_encargada_proveedor
+format %-5s partida
  
 ds, has(type numeric) 
 local numvars "`r(varlist)'"
 format %20.0fc `numvars'
-format %9.0g id firmid year female_firm
+format %10.0g firmid id firmid year female_firm
 format %5.0g linea genderfo ceochange ceof2m ceom2f winner cantidad
 
 ***********************************************************************

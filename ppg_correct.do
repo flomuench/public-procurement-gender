@@ -72,7 +72,9 @@ drop _merge
 merge m:1 firmid persona_encargada_proveedor using `missings_coded', replace update
 replace genderfo = 0 if _merge == 4 | _merge == 5 & female_firm == 0
 replace genderfo = 1 if _merge == 4 | _merge == 5 & female_firm == 1
-	
+drop _merge
+
+
 	* make manual corrections for conflicting merge results
 replace genderfo = 0 if persona_encargada_proveedor == "ricardo barrantes chacón"
 replace genderfo = 1 if persona_encargada_proveedor == "ana milena yepes garces"
@@ -471,18 +473,6 @@ replace persona_encargada_proveedor = "samuel bermudez ureña" if persona_encarg
 replace persona_encargada_proveedor = "jennifer gonzales amador" if persona_encargada_proveedor == "jennifer gonzalez amador"
 }
 
-	
-
-
-***********************************************************************
-* 	PART 6:  Convert string to numerical variables	  			
-***********************************************************************
-/*foreach x of global numvarc {
-destring `x', replace
-format `x' %25.0fc
-}
-*/
-
 ***********************************************************************
 * 	PART 7:  Code missing gender for procurement officials	  			
 ***********************************************************************
@@ -491,7 +481,12 @@ keep if female_po == .
 contract nombre_comprador female_po
 cd "$ppg_intermediate"
 export excel missing_po_gender, firstrow(var) replace
+import excel missing_po_gender_coded, clear firstrow
+save "missing_po_gender_coded", replace
 restore
+
+merge m:1 nombre_comprador using missing_po_gender_coded, update
+drop _merge
 
 
 ***********************************************************************
