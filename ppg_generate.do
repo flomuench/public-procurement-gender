@@ -129,9 +129,20 @@ egen rep_id = group(persona_encargada_proveedor)
 
 contract firmid rep_id persona_encargada_proveedor
 drop _freq
-bys firmid (rep_id): gen firm_rep_id = _n
-drop firm_rep_id
-reshape wide persona_encargada_proveedor, i(firmid) j(rep_id)
+bysort firmid (persona_encargada_proveedor) : gen firm_rep_id = sum(persona_encargada_proveedor != persona_encargada_proveedor[_n-1])
+drop rep_id
+reshape wide persona_encargada_proveedor, i(firmid) j(firm_rep_id)
+
+matchit persona_encargada_proveedor1 persona_encargada_proveedor2
+
+local forword = 2
+forvalues i = 1(1)25 {
+	matchit persona_encargada_proveedor`i' persona_encargada_proveedor`forword', gen(score12)
+	local forword i++
+	}
+	
+br persona_encargada_proveedor1 persona_encargada_proveedor2 if similscore > 0.9
+	
 
 
 

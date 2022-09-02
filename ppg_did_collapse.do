@@ -11,7 +11,7 @@
 *																	  
 *	Author:  	Florian Muench					          															      
 *	ID variable: 	process level id = id ; firm level id = firmid
-*	Requires:  	   								  
+*	Requires:  sicop_replicable								  
 *	Creates:  			   						  
 *																	  
 ***********************************************************************

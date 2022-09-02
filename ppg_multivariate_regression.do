@@ -122,6 +122,4 @@ coefplot predictedprob_r2, drop(_cons) xline(0) ///
 gr export predicted_probabilities_r2.png, replace
 
 
-***********************************************************************
-* 	Save the changes made to the data		  			
-***********************************************************************
+

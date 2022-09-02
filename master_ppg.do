@@ -37,7 +37,10 @@ set varabbrev off /* avoid wrong variable gets selected */
 *ssc install xtable
 *ssc install coefplot
 *ssc install outreg2
-*net install grc1leg,from( http://www.stata.com/users/vwiggins/)	
+*net install grc1leg,from( http://www.stata.com/users/vwiggins/)
+ssc install freqindex
+ssc install matchit
+	
 */
 
 	* define graph scheme for visual outputs
@@ -144,7 +147,6 @@ if (0) do "${ppg_github}/ppg_firm_level_statistics.do"
 /* --------------------------------------------------------------------
 	PART 5.1.: multivariate regression analysis
 	Requires: sicop_replicable
-	Creates:  sicop_firm
 ----------------------------------------------------------------------*/
 if (0) do "${ppg_github}/ppg_multivariate_regression.do"
 /* --------------------------------------------------------------------
