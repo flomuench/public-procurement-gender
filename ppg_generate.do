@@ -126,6 +126,7 @@ egen rep_id = group(persona_encargada_proveedor)
 
 *egen firm_rep_id = group(firmid rep_id)
 
+*preserve 
 
 contract firmid rep_id persona_encargada_proveedor
 drop _freq
@@ -133,16 +134,59 @@ bysort firmid (persona_encargada_proveedor) : gen firm_rep_id = sum(persona_enca
 drop rep_id
 reshape wide persona_encargada_proveedor, i(firmid) j(firm_rep_id)
 
-matchit persona_encargada_proveedor1 persona_encargada_proveedor2
-
-local forword = 2
-forvalues i = 1(1)25 {
-	matchit persona_encargada_proveedor`i' persona_encargada_proveedor`forword', gen(score12)
-	local forword i++
+/*
+local i = 2
+forvalues x = 1(1)24 {
+	matchit persona_encargada_proveedor`x' persona_encargada_proveedor`i', gen(score`x'`i')
+	local ++i
 	}
+*/	
+local i = 1
+forvalues first  = 1(1)24 {
+		local ++i
+forvalues second = `i'(1)25 {
+	matchit persona_encargada_proveedor`first' persona_encargada_proveedor`second', gen(score`first'`second')
+	}
+}
+
+/*1 
+23456
+2
+346789	
+
+	* remove all 1 due to missing values
+foreach x of varlist score12-score2425 {
+	replace `x' = . if `x' == 1
+}
+
+	* create per firms maxscore
+egen maxscore = rowmax(score12-score2425)
+
+	* identify potential problematic cases
+br persona_encargada_proveedor* if maxscore >= 0.9
+
+	* check for cross-matches
+
+
+
+restore
+
+* left
+local correct_names `" "minor ramirez marin" "maria gabriela duran solis" "jonathan mariÑo  g" "'
+
+*right
+local incorrect_names `" "minor ramirez mariz" "maria gabriela duran solis." "jonathan mariÑo g"'
+
+local n : word count `correct_names'
+
+forvalues i = 1/`n' {
+	local a : word `i' of `correct_names'
+	local b : word `i' of `incorrect_names'
+	replace persona_encargada_proveedor = "`a'" if persona_encargada_proveedor == "`b'"
 	
-br persona_encargada_proveedor1 persona_encargada_proveedor2 if similscore > 0.9
-	
+}
+
+ 
 
 
 
