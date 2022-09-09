@@ -476,6 +476,7 @@ replace persona_encargada_proveedor = "jennifer gonzales amador" if persona_enca
 ***********************************************************************
 * 	PART 7:  Code missing gender for procurement officials	  			
 ***********************************************************************
+/*
 preserve
 keep if female_po == .
 contract nombre_comprador female_po
@@ -487,7 +488,7 @@ restore
 
 merge m:1 nombre_comprador using missing_po_gender_coded, update
 drop _merge
-
+*/
 
 ***********************************************************************
 * 	Save the changes made to the data		  			

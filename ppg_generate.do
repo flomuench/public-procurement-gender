@@ -118,15 +118,15 @@ codebook firmid if multiple_change == 1
 ***********************************************************************
 * 	PART 6:  Verify via text matching if change in reps not wrongly assigned due to misspellings	  			
 ***********************************************************************
-
 egen rep_id = group(persona_encargada_proveedor)
 
-*egen firm_rep_id = group(firmid rep_id)
-*bys firmid (rep_id): gen firm_rep_id = _n
 
-*egen firm_rep_id = group(firmid rep_id)
-
-*preserve 
+* note: this code only needs to be executed when running the do-file for the first time
+* this code creates a list of all the firms (one firm per row) and all their representatives (one column per rep)
+* it then combines all potential within firm repname-repname combinations for their similarity to identify incorrect
+* spellings based on string similarity >= 0.9
+/*
+preserve 
 
 contract firmid rep_id persona_encargada_proveedor
 drop _freq
@@ -149,10 +149,13 @@ forvalues second = `i'(1)25 {
 	}
 }
 
-/*1 
+
+/*
+1 
 23456
 2
 346789	
+*/
 
 	* remove all 1 due to missing values
 foreach x of varlist score12-score2425 {
@@ -165,17 +168,15 @@ egen maxscore = rowmax(score12-score2425)
 	* identify potential problematic cases
 br persona_encargada_proveedor* if maxscore >= 0.9
 
-	* check for cross-matches
-
-
-
 restore
+*/
 
+* drop remaining inconsistent spellings
 * left
-local correct_names `" "minor ramirez marin" "maria gabriela duran solis" "jonathan mariÑo  g" "'
+local correct_names `" "minor ramirez marin" "maria gabriela duran solis" "jonathan mariÑo  g" "genaro camacho elizondo" "auxiliadora alfaro ortega" "'
 
 *right
-local incorrect_names `" "minor ramirez mariz" "maria gabriela duran solis." "jonathan mariÑo g"'
+local incorrect_names `" "minor ramirez mariz" "maria gabriela duran solis." "jonathan mariÑo g" "jenaro camacho elizondo" " "maria auxiliadora alfaro ortega" "'
 
 local n : word count `correct_names'
 
@@ -185,8 +186,6 @@ forvalues i = 1/`n' {
 	replace persona_encargada_proveedor = "`a'" if persona_encargada_proveedor == "`b'"
 	
 }
-
- 
 
 
 
