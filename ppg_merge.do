@@ -20,9 +20,13 @@ use "${ppg_intermediate}/sicop_replicable", clear
 
 	* import + save list of firm reps
 preserve
-	import delimited using "${ppg_gender_lists}/listgenderfo", varn(1) case(preserve) clear
+	import delimited using "${ppg_gender_lists}/listgenderfo.csv", varn(1) delimiters(";") case(preserve) clear
 	save "${ppg_gender_lists}/listgenderfo", replace
+	if "`c(username)'" == "ASUS"{
+	rename ïPERSONA_ENCARGADA_PROVEEDOR PERSONA_ENCARGADA_PROVEEDOR
+	}
 restore
+
 
 	* merge list on main data
 merge m:1 PERSONA_ENCARGADA_PROVEEDOR using "${ppg_gender_lists}/listgenderfo"
