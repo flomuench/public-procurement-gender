@@ -19,9 +19,23 @@
 *	Creates:  			                          
 *																	  
 ***********************************************************************
-* 	PART 1:  Make all string obs lower case & remove trailing spaces  			
+* 	PART 0:  Import data
 ***********************************************************************
 use "${ppg_intermediate}/sicop_replicable", clear
+
+***********************************************************************
+* 	PART 1:  Drop observations with missing bidder name
+***********************************************************************
+* note that in the 47,073 cases we also miss data for amount, points, evaluation criteria
+	* which suggests that the processes were actually never completed
+drop if nombre_proveedor == ""
+
+
+
+***********************************************************************
+* 	PART 1:  Make all string obs lower case & remove trailing spaces  			
+***********************************************************************
+
 	
 ds, has(type string) 
 local strvars "`r(varlist)'"
@@ -47,7 +61,7 @@ replace female_firm = 0 if firmid == 7 & persona_encargada_proveedor == "luis go
 replace genderfo = 0 if firmid == 7 & persona_encargada_proveedor == "luis gonzalez mora"
 
 ***********************************************************************
-* 	PART 4:  Code missing gender values	
+* 	PART 4:  Code missing firm representative gender values	
 ***********************************************************************
 * export Excel file with all the different values of female_firm per firm
 /*
@@ -84,7 +98,7 @@ replace genderfo = 1 if persona_encargada_proveedor == "kenny granados hodgson"
 
 
 ***********************************************************************
-* 	PART 5:  Correct spelling of firm representatives
+* 	PART 5: Correct misspelling of firm representatives
 ***********************************************************************
 	* export rep-firm combinations to identify obs that need to be changed
 /*

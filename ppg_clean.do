@@ -22,10 +22,13 @@
 ***********************************************************************
 * 	PART 1: 	Make all variables names lower case		  			
 ***********************************************************************
-use "${ppg_raw}/SICOP_gender_new_workingversion", clear
+use "${ppg_intermediate}/sicop_replicable", clear
 
 rename TIPO tipo_s
 rename *, lower
+
+
+
 
 ***********************************************************************
 * 	PART 2: 	Drop variables		  			
@@ -100,5 +103,4 @@ export excel ppg_codebook_labels in 1/1, firstrow(varlabels) replace
 ***********************************************************************
 * 	Save the changes made to the data		  			
 ***********************************************************************
-cd "$ppg_intermediate"
-save "sicop_replicable", replace
+save "${ppg_intermediate}/sicop_replicable", replace

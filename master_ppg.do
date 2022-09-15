@@ -55,18 +55,15 @@ set sortseed 01092022
 ***********************************************************************
 
 		* globals: dynamic folder paths
-/*
+
 if "`c(username)'" == "ASUS"{
-		global gdrive = "G:/Meine Ablage"
+		global ppg_gdrive = "G:/Meine Ablage/Public Procurement and Gender"
 }
 else{
-		global gdrive = "C:/Users/`c(username)'/Google Drive"
+		global ppg_gdrive = "C:/Users/`c(username)'/Google Drive/Public Procurement and Gender"
 }
-*/
 		
 if c(os) == "Windows" {
-	global ppg_gdrive = "C:/Users/`c(username)'/Google Drive/Public Procurement and Gender"
-	*global ppg_gdrive = "${gdrive}/Public Procurement and Gender"
 	global ppg_github = "C:/Users/`c(username)'/Documents/GitHub/public-procurement-gender"
 	global ppg_backup = "C:/Users/`c(username)'/Documents/backup-public-procurement-gender"
 }
@@ -82,6 +79,7 @@ global ppg_data = "${ppg_gdrive}/Data/Yami_Flo"
 global ppg_raw = "${ppg_data}/raw"
 global ppg_intermediate "${ppg_data}/intermediate"
 global ppg_final "${ppg_data}/final"
+global ppg_gender_lists "${ppg_data}/files_for_gender_coding"
 			
 			* outputs
 global ppg_output = "${ppg_gdrive}/Output"
@@ -106,8 +104,20 @@ global firm_controls "i.firm_size firm_age_ca i.firm_location" /*firm capital no
 * 	PART 3: 	Run data cleaning & preparation do-files			  	
 ***********************************************************************
 /* --------------------------------------------------------------------
+	PART 3.0: import
+	Requires: SICOP_gender_new_workingversion or SiCOPgendernew
+	Creates:  sicop_replicable
+----------------------------------------------------------------------*/
+if (1) do "${ppg_github}/ppg_import.do"
+/* --------------------------------------------------------------------
+	PART 3.1: merge
+	Requires: sicop_replicable
+	Creates:  listgenderfo.xlsx/dta, listgenderpo.xlsx/dta
+----------------------------------------------------------------------*/		
+if (1) do "${ppg_github}/ppg_merge.do"
+/* --------------------------------------------------------------------
 	PART 3.1: clean
-	Requires: SICOP_gender_new_workingversion
+	Requires: sicop_replicable
 	Creates:  sicop_replicable
 ----------------------------------------------------------------------*/		
 if (1) do "${ppg_github}/ppg_clean.do"
