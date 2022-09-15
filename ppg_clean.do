@@ -44,7 +44,9 @@ drop firm_size firm_founded firm_registration firm_registro date_ca date_pu ///
 ds, has(type string) 
 local strvars "`r(varlist)'"
 format %-15s `strvars'
-format %-25s numero_procedimiento persona_encargada_proveedor
+format %-25s numero_procedimiento persona_encargada_proveedor nombre_proveedor nombre_comprador
+format %-50s nombre_proveedor
+format %-35s persona_encargada_proveedor nombre_comprador
 format %-5s partida
  
 ds, has(type numeric) 

@@ -17,7 +17,7 @@
 ***********************************************************************
 * 	PART START:  Load data set		  			
 ***********************************************************************
-use "${ppg_intermediate}/sicop_replicable", clear
+use "${ppg_final}/sicop_final", clear
 
 
 ***********************************************************************
@@ -39,7 +39,24 @@ in gender of rep.
 
 			* last line suggests that dup = 0 & dup = 1 select per firm one loosing and one winning bid
 			* also checked and inclusion of procurement officer firm name did not change the number of observations in dup 0 and 1
-			
+	
+	* same problem for points
+	
+	* problem: given collapse is not used, code does not provide full amount --> solution: use egen before?
+egen firm_process_id = group(numero_procedimiento firmid)
+order firm_process_id, a(linea)
+egen amount_total_process = sum(monto_crc), by(firm_process_id)
+format %20.0fc amount_total_process
+br id numero_procedimiento partida linea firmid firm_process_id amount_total_process nombre_proveedor persona_encargada_proveedor nombre_comprador  monto_crc
+drop firm_process_id
+
+/* verification:
+process example = 2010cd-000001-0000400001
+firmid 1 = 742 wins linea 1 and linea 2
+39727950.004 + 229357.569 = 39957308
+
+*/
+	
 			
 	* identify & remove same-process-firmid-winner combinations
 sort numero_procedimiento firmid winner
@@ -47,6 +64,9 @@ quietly by numero_procedimiento firmid winner:  gen dup = cond(_N==1,0,_n)
 order dup, b(post)
 drop if dup > 1 & dup < .
 	* 580,878 of 774, 391 obs dropped...
+	* 193,507 obs remain
+codebook numero_procedimiento
+	* 43 692 single processes
 	
 ***********************************************************************
 * 	PART 2:  	create firm level number of occurence variable	  			
