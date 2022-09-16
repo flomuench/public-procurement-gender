@@ -20,18 +20,15 @@ use "${ppg_intermediate}/sicop_replicable", clear
 
 	* import + save list of firm reps
 preserve
-	import excel using "${ppg_gender_lists}/listgenderfo.csv", firstrow case(preserve) clear
-	*import delimited using "${ppg_gender_lists}/listgenderfo.csv", varn(1) delimiters(";") case(preserve) clear
-	*if "`c(username)'" == "BPC129"{
-	*rename ïPERSONA_ENCARGADA_PROVEEDOR PERSONA_ENCARGADA_PROVEEDOR
-	*}
+	import excel using "${ppg_gender_lists}/listgenderfo.xlsx", firstrow case(preserve) clear
 	save "${ppg_gender_lists}/listgenderfo", replace
 restore
 
 
 	* merge list on main data
 merge m:1 PERSONA_ENCARGADA_PROVEEDOR using "${ppg_gender_lists}/listgenderfo"
-_drop merge
+drop if _merge == 2 
+drop _merge
 
 
 ***********************************************************************
@@ -39,14 +36,16 @@ _drop merge
 ***********************************************************************
 	* import + save list of firm reps
 preserve
-	import excel using "${ppg_gender_lists}/listgenderpo", firstrow clear
+	import excel using "${ppg_gender_lists}/listgenderpo.xlsx", firstrow clear
+	drop if NOMBRE_COMPRADOR == ""
+	duplicates list NOMBRE_COMPRADOR
+	duplicates drop
 	save "${ppg_gender_lists}/listgenderpo", replace
 restore
 
 	* merge list on main data
-merge m:1 PERSONA_ENCARGADA_PROVEEDOR using "${ppg_gender_lists}/listgenderpo"
-_drop merge
-
+merge m:1 NOMBRE_COMPRADOR using "${ppg_gender_lists}/listgenderpo"
+drop _merge
 
 
 ***********************************************************************

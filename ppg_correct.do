@@ -31,109 +31,79 @@ use "${ppg_intermediate}/sicop_replicable", clear
 drop if nombre_proveedor == ""
 
 
-
 ***********************************************************************
-* 	PART 1:  Make all string obs lower case & remove trailing spaces  			
+* 	PART 2:  Make all string obs lower case & remove trailing spaces  			
 ***********************************************************************
-
-	
 ds, has(type string) 
 local strvars "`r(varlist)'"
 foreach x of local strvars {
 replace `x'= stritrim(strtrim(lower(`x')))
 }
 
-***********************************************************************
-* 	PART 2:  Encode categorical variables		  			
-***********************************************************************
-		* firm size dummy
-lab def fsize 1 "micro" 2 "pequeña" 3 "mediana" 4 "grande" 5 "no clasificado"
-encode tipo_empresa, gen(firm_size) label(fsize)
-lab var firm_size "micro, small, medium, large or unclassified firm"
-
 
 ***********************************************************************
-* 	PART 3:  Replace string with numeric values		  			
-***********************************************************************
-	* q391: ventes en export 
-*replace q391_corrige = "254000000" if id == "f247"
-replace female_firm = 0 if firmid == 7 & persona_encargada_proveedor == "luis gonzalez mora"
-replace genderfo = 0 if firmid == 7 & persona_encargada_proveedor == "luis gonzalez mora"
-
-***********************************************************************
-* 	PART 4:  Code missing firm representative gender values	
+* 	PART 3:  Code missing firm representative gender values	
 ***********************************************************************
 * export Excel file with all the different values of female_firm per firm
 /*
 preserve
-contract firmid nombre_proveedor persona_encargada_proveedor female_firm
-format %40s nombre_proveedor persona_encargada_proveedor
-sort firmid female_firm persona_encargada_proveedor
+contract persona_encargada_proveedor genderfo
 	* 382 missing values
 cd "$ppg_intermediate"
-export excel using missing_names if female_firm == ., replace firstrow(var)
-
+export excel using missing_names if genderfo == ., replace firstrow(var)
 restore
 */
-cd "$ppg_intermediate"
+
 preserve
 	* import excel with missing names gender coded
-import excel using missing_names_coded, clear firstrow
-tempfile missings_coded
-save "`missings_coded'", replace
+	import excel using "${ppg_gender_lists}/missing_names_coded.xlsx", firstrow case(preserve) clear
+	duplicates drop persona_encargada_proveedor, force
+	rename female_firm genderfo
+	lab var genderfo ""
+	drop nombre_proveedor firmid
+	format persona_encargada_proveedor %-50s
+	save "${ppg_gender_lists}/missing_names_coded", replace
 restore
-drop _merge
-merge m:1 firmid persona_encargada_proveedor using `missings_coded', replace update
-replace genderfo = 0 if _merge == 4 | _merge == 5 & female_firm == 0
-replace genderfo = 1 if _merge == 4 | _merge == 5 & female_firm == 1
-drop _merge
 
+merge m:1 persona_encargada_proveedor using "${ppg_gender_lists}/missing_names_coded", update replace
+/*
+   Result                           # of obs.
+    -----------------------------------------
+    not matched                       996,043
+        from master                   996,043  (_merge==1)
+        from using                          0  (_merge==2)
+
+    matched                             5,244
+        not updated                     2,486  (_merge==3)
+        missing updated                 2,729  (_merge==4)
+        nonmissing conflict                29  (_merge==5)
+    -----------------------------------------
+*/
+drop _merge
 
 	* make manual corrections for conflicting merge results
-replace genderfo = 0 if persona_encargada_proveedor == "ricardo barrantes chacón"
-replace genderfo = 1 if persona_encargada_proveedor == "ana milena yepes garces"
-replace genderfo = 1 if persona_encargada_proveedor == "delali campbell callimore"
 replace genderfo = 1 if persona_encargada_proveedor == "kenny granados hodgson"
-
+replace genderfo = 0 if persona_encargada_proveedor == "luis gonzalez mora"
 
 
 ***********************************************************************
 * 	PART 5: Correct misspelling of firm representatives
-***********************************************************************
-	* export rep-firm combinations to identify obs that need to be changed
-/*
-preserve
-	
-	* drop the firms with juste one representative over whole time period
-drop if never_change == 1
-			* 360,812 obs deleted		
-	* only keep one line per firm-representative pair as other data too big
-contract firmid persona_encargada_proveedor
-codebook firmid
-codebook persona_encargada_proveedor
-format %-40s persona_encargada_proveedor
-duplicates tag firmid, gen(dupfirm)
-drop if dupfirm == 0
-		* 8661 firms remain, 10193 representatives
+***********************************************************************	
+	* correct non-sensical names
+list persona_encargada_proveedor if regexm(persona_encargada_proveedor, "representante") == 1
 
-	* gen new id that is unique for firm-rep combi
-gen id_firmrep = _n
-cd "$ppg_intermediate"	
+local non_sensical_names `" "socios" "representante 1" "representante" "'
+foreach name of local non_sensical_names {
+	replace persona_encargada_proveedor = regexr(persona_encargada_proveedor, "`name'", "")
+}
+	* correct names that are numbers
+replace persona_encargada_proveedor = regexr(persona_encargada_proveedor, "[0-9]+", "")
 
-	* code for matchit
-gen persona_encargada_proveedor1 = persona_encargada_proveedor[_n-1]
-matchit persona_encargada_proveedor persona_encargada_proveedor1
-*browse if similscore > 0.7
-export excel firm_rep_combinations, replace firstrow(var)
-
-restore
-*/
-codebook persona_encargada_proveedor 
-			* suggest 10187 uniques values
-
+	* adjust gender as missing for wrong firm rep names
+replace genderfo = . if persona_encargada_proveedor == ""
+			
 	* correction based on manuel identification in Excel firm_rep_combinations
 {
-local person persona_encargada_proveedor
 replace persona_encargada_proveedor = "victor cordero centeno" if persona_encargada_proveedor == "victor cordero centeo"
 replace persona_encargada_proveedor = "wilder hererra galvez" if persona_encargada_proveedor == "wilder herrera galvez"
 replace persona_encargada_proveedor = "allan villallobos cambronero" if persona_encargada_proveedor == "allan villalobos cambronero"
@@ -151,7 +121,7 @@ replace persona_encargada_proveedor = "angel antonio godinez prado" if persona_e
 replace persona_encargada_proveedor = "katherine wachsman canales" if persona_encargada_proveedor == "katherin wachsman canales"
 replace persona_encargada_proveedor = "alfredo gallegos jimenez" if persona_encargada_proveedor == "alfredo gallegos jimrenez"
 replace persona_encargada_proveedor = "yanori alfaro alvarez" if persona_encargada_proveedor == "yaunori alfaro alvarez"
-drop if firmid == 4983 /* only numbers for names */
+
 replace persona_encargada_proveedor = "henry matarrita alvarez" if persona_encargada_proveedor == "henry matarrita avarez"
 replace persona_encargada_proveedor = "liliana varela salazar" if persona_encargada_proveedor == "liliana maria varela salazar"
 replace persona_encargada_proveedor = "yorleny cambronero cubero" if persona_encargada_proveedor == "yorleni cambronero cubero"
@@ -286,7 +256,6 @@ replace persona_encargada_proveedor = "mauricio vega salazar" if persona_encarga
 replace persona_encargada_proveedor = "edgar antonio meseguer armijo" if persona_encargada_proveedor == "edgar meseguer armijo"
 replace persona_encargada_proveedor = "manuel enrique fernandez vaglio" if persona_encargada_proveedor == "manuel fernandez vaglio"
 replace persona_encargada_proveedor = "hugo poltronieri trejos" if persona_encargada_proveedor == "hugo enrique poltronieri trejos"
-drop if firmid == 6639 & persona_encargada_proveedor == "maria magdalia bolaÑos soto"
 replace persona_encargada_proveedor = "marvin gerardo rodriguez esquivel" if persona_encargada_proveedor == "marvin rodriguez esquivel"
 replace persona_encargada_proveedor = "andres clarke holman" if persona_encargada_proveedor == "andres clarke h"
 replace persona_encargada_proveedor = "mario francisco granados masis" if persona_encargada_proveedor == "mario granados masis"
@@ -488,7 +457,7 @@ replace persona_encargada_proveedor = "jennifer gonzales amador" if persona_enca
 }
 
 ***********************************************************************
-* 	PART 7:  Code missing gender for procurement officials	  			
+* 	PART 6:  Code missing gender for procurement officials	  			
 ***********************************************************************
 /*
 preserve
@@ -504,7 +473,112 @@ merge m:1 nombre_comprador using missing_po_gender_coded, update
 drop _merge
 */
 
+preserve
+	* import excel with missing names gender coded
+	import excel using "${ppg_gender_lists}/missing_po_gender_coded.xlsx", firstrow case(preserve) clear
+	rename female_po genderpo
+	lab var genderpo ""
+	isid nombre_comprador
+	save "${ppg_gender_lists}/missing_po_gender_coded", replace
+restore
+
+merge m:1 nombre_comprador using "${ppg_gender_lists}/missing_po_gender_coded", update replace
+drop _merge
+
+
+***********************************************************************
+* 	PART 7:  Correct & clean product classification code	  			
+***********************************************************************
+* import product classification descriptions
+preserve
+	import excel using "${ppg_product}/codigos_unidad_compra_adjusted.xlsx", firstrow clear
+	replace clasificacion_objeto = subinstr(clasificacion_objeto, ".", "",2)
+	destring clasificacion_objeto, replace
+	drop if clasificacion_objeto == .
+	codebook clasificacion_objeto
+	save "${ppg_product}/product", replace
+restore
+
+* prepare main data set for merger
+replace clasificacion_objeto = subinstr(clasificacion_objeto, ".", "",2)
+destring clasificacion_objeto, replace
+
+* merge
+merge m:1 clasificacion_objeto using "${ppg_product}/product", update replace
+drop if _merge == 2
+drop _merge
+
+* clean product classification description variable
+format %-50s clasificacion_objeto_des
+replace clasificacion_objeto_des= stritrim(strtrim(lower(clasificacion_objeto_des)))
+
+***********************************************************************
+* 	PART 8:  Categorisation of institutions	  			
+***********************************************************************
+preserve
+	import excel using "${ppg_institutions}/List_of_institutions_mit_dummy.xlsx", firstrow case(lower) clear
+	isid institucion
+	replace institucion= stritrim(strtrim(lower(institucion)))
+	format institucion %-75s
+	lab var institucion ""
+	save "${ppg_institutions}/institutions", replace
+restore
+
+* merge corrections for merger
+		* correct accent
+replace institucion = subinstr(institucion, "é", "e",.)
+replace institucion = subinstr(institucion, "ó", "o",.)
+replace institucion = subinstr(institucion, "Ó", "o",.)
+replace institucion = subinstr(institucion, "í", "i",.)
+replace institucion = subinstr(institucion, "á", "a",.)
+replace institucion = subinstr(institucion, "Á", "a",.)
+replace institucion = subinstr(institucion, "ú", "u",.)
+
+		* correct wrong spellings
+replace institucion = "ministerio de gobernacion y policia" if institucion == "ministerio gobernacion y policia"
+
+		* correct institution names
+local correct_names `" "bn sociedad administradora de fondos de inversion sociedad anonima" "comision nacional de prestamos para educacion" "laboratorio costarricense de metrologia" "municipalidad de palmares" "sistema de emergencias 911" "teatro nacional" "'
+		* incorrect institution names
+local incorrect_names `" "b n sociedad administradora de fondos de inversion sociedad anonima" "comisión nacional de préstamos para educación" "laboratorio costarricense de metrologia (lacomet)" "municipalidad de palmares." "sistema de emergencias 9-1-1" "teatro nacional de costa rica" "'
+
+local n : word count `correct_names'
+forvalues i = 1/`n' {
+	local a : word `i' of `correct_names'
+	local b : word `i' of `incorrect_names'
+	replace institucion = "`a'" if institucion == "`b'"
+}
+
+
+* merge
+merge m:1 institucion using "${ppg_institutions}/institutions", update replace
+*drop if _merge == 2
+drop _merge
+
+* replace based on eyeballing Excel
+local institutions4 `" "comité cantonal de deportes y recreación de belén" "comité cantonal de deportes y recreación de san josé"  "compaÑÍa nacional de fuerza y luz sociedad anÓnima"  "direccion nacional de cen-cinai" "fideicomiso 872 ms-ctams-bncr" "fideicomiso de titularizacion inmobiliario ice - bcr" "fideicomiso fonatt jadgme - bcr" "fideicomiso fondo especial de migraciÓn jadgme - bcr" "fideicomiso fondo social migratorio jadgme - bcr"  "fideicomiso inmobiliario ccss bcr dos mil diecisiete" "ins inversiones sociedad administradora de fondos de inversion sociedad anonima"  "ins valores puesto de bolsa sociedad anonima" "instituto costarricense de investigacion y enseÑanza en nutricion y salud" "instituto de desarrollo profesional uladislao gÁmez solano" "instituto del café de costa rica" "instituto nacional de innovacion y transferencia en tecnologia agropecuaria" "junta administrativa de la dirección general de migración y extranjería" "museo arte y diseÑo contemporaneo" "compaÑÍa nacional de fuerza y luz sociedad anonima" "'
+foreach institution of local institutions4 {
+	replace institucion_tipo = 4 if institucion == "`instituion'"
+}
+
+
+local institutions2 `" "instituto costarricense de pesca y acuicultura"  "instituto nacional de seguros" "instituto tecnologico de costa rica" "'
+foreach institution of local institutions1 {
+	replace institucion_tipo = 2 if institucion == "`instituion'"
+}
+
+
+local institutions1 `" "contraloría general de la republica" "defensoría de los habitantes de la república"  "'
+foreach institution of local institutions1 {
+	replace institucion_tipo = 1 if institucion == "`instituion'"
+}
+
+* drop if not institution but some special contract payment
+drop if institucion == "contrato fideicomiso inmobiliario poder judicial 2015" | institucion == "contrato fideicomiso inmobiliario tribunal registral administrativo bcr 2014"
+
+
+
 ***********************************************************************
 * 	Save the changes made to the data		  			
 ***********************************************************************
-save "sicop_replicable", replace
+save "${ppg_intermediate}/sicop_replicable", replace

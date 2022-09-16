@@ -22,7 +22,6 @@
 * four level version (1 million + observations)
 use "${ppg_raw}/SICOPgendernew", clear
 
-
 ***********************************************************************
 * 	PART 2: 	save as raw data 
 ***********************************************************************

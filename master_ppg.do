@@ -80,6 +80,8 @@ global ppg_raw = "${ppg_data}/raw"
 global ppg_intermediate "${ppg_data}/intermediate"
 global ppg_final "${ppg_data}/final"
 global ppg_gender_lists "${ppg_data}/files_for_gender_coding"
+global ppg_product "${ppg_data}/product_categories"
+global ppg_institutions "${ppg_data}/institutions"
 			
 			* outputs
 global ppg_output = "${ppg_gdrive}/Output"
@@ -133,6 +135,9 @@ if (1) do "${ppg_github}/ppg_correct.do"
 	Creates:  sicop_final
 ----------------------------------------------------------------------*/		
 if (1) do "${ppg_github}/ppg_generate.do"
+
+
+* insert here code to create the different leveled data sets for analysis
 
 ***********************************************************************
 * 	PART 4: 	Run descriptive statistics do files		  	

@@ -80,9 +80,15 @@ label var firm_international "international firm (= not from CR)"
 label def international 0 "Costa Rican" 1 "International"
 lab val firm_international international
 
+
 ***********************************************************************
 * 	PART 4:  generate firm size dummy
 ***********************************************************************
+		* firm size dummy
+lab def fsize 1 "micro" 2 "pequeña" 3 "mediana" 4 "grande" 5 "no clasificado"
+encode tipo_empresa, gen(firm_size) label(fsize)
+lab var firm_size "micro, small, medium, large or unclassified firm"
+
 tab firm_size, gen(firm_size)
 
 
