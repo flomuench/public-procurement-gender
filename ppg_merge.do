@@ -20,11 +20,12 @@ use "${ppg_intermediate}/sicop_replicable", clear
 
 	* import + save list of firm reps
 preserve
-	import delimited using "${ppg_gender_lists}/listgenderfo.csv", varn(1) delimiters(";") case(preserve) clear
+	import excel using "${ppg_gender_lists}/listgenderfo.csv", firstrow case(preserve) clear
+	*import delimited using "${ppg_gender_lists}/listgenderfo.csv", varn(1) delimiters(";") case(preserve) clear
+	*if "`c(username)'" == "BPC129"{
+	*rename ïPERSONA_ENCARGADA_PROVEEDOR PERSONA_ENCARGADA_PROVEEDOR
+	*}
 	save "${ppg_gender_lists}/listgenderfo", replace
-	if "`c(username)'" == "ASUS"{
-	rename ïPERSONA_ENCARGADA_PROVEEDOR PERSONA_ENCARGADA_PROVEEDOR
-	}
 restore
 
 
