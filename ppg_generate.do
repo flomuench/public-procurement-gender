@@ -24,6 +24,7 @@
 ***********************************************************************
 use "${ppg_intermediate}/sicop_replicable", clear
 
+
 ***********************************************************************
 * 	PART 0:  create Stata recognized date variables			
 ***********************************************************************
@@ -48,6 +49,9 @@ foreach var of local dates {
 	replace year_`var' = year_`var' + 2000
 }
 
+lab var year_registro "year when firm was registered"
+lab var date_registro "date when firm was registered"
+
 	* do the same for the year when the firm was founded (different format thus not in loop)
 gen year_constitucion = substr(fecha_constitucion, -4, .), a(fecha_constitucion)
 destring year_constitucion, replace
@@ -68,12 +72,7 @@ label var age_registro "firm age when registered"
 
 
 ***********************************************************************
-* 	PART 2:  generate location dummies		
-***********************************************************************
-tab firm_location, gen(firm_location)
-
-***********************************************************************
-* 	PART 3:  generate country origin dummy
+* 	PART 2:  generate country origin dummy
 ***********************************************************************
 gen firm_international = (pais_domicilio != "crc"), a(pais_domicilio)
 label var firm_international "international firm (= not from CR)"
@@ -82,19 +81,94 @@ lab val firm_international international
 
 
 ***********************************************************************
-* 	PART 4:  generate firm size dummy
+* 	PART 3:  generate firm size dummy
 ***********************************************************************
 		* firm size dummy
 lab def fsize 1 "micro" 2 "pequeña" 3 "mediana" 4 "grande" 5 "no clasificado"
 encode tipo_empresa, gen(firm_size) label(fsize)
 lab var firm_size "micro, small, medium, large or unclassified firm"
+drop tipo_empresa
 
-tab firm_size, gen(firm_size)
+
+***********************************************************************
+* 	PART 4:  generate firm region location dummy
+***********************************************************************
+replace codigo_postal = " " if codigo_postal == "008"
+gen cp = substr(codigo_postal, 1,1)
+destring cp, replace
+label define Region 1 "San José" 2 "Alajuela" 3 "Cartago" 4 "Heredia" 5 "Guanac." 6 "Punta." 7 "Limón", replace
+label values cp Region
+rename cp region
+order region, a(firm_size)
+rename region firm_location
+lab var firm_location "firm location, region in Costa Rica"
+
+
+
+***********************************************************************
+* 	PART 5:  generate sector dummy
+***********************************************************************
+gen co = string(clasificacion_objeto)
+replace co = substr(co,1,3)
+destring co, replace
+gen sector = .
+
+replace sector = 1 if co == 101 
+replace sector = 2 if co == 102
+replace sector = 3 if co == 103
+replace sector = 4 if co == 104
+replace sector = 5 if co == 105
+replace sector = 6 if co == 106
+replace sector = 7 if co == 109 | co == 100 | co == 107 | co == 199
+replace sector = 8 if co == 108
+replace sector = 9 if co == 201
+
+replace sector = 10 if co == 202
+replace sector = 11 if co == 203 | co == 200
+replace sector = 12 if co == 204
+replace sector = 13 if co == 205
+replace sector = 14 if co == 299
+
+replace sector = 15 if co == 500 | co == 501
+replace sector = 16 if co == 502
+replace sector = 17 if co == 503
+replace sector = 18 if co == 599
+replace sector = 19 if co == 602 | co == 607
+replace sector = 20 if co == 0 | co == 103 
+
+drop co
+
+label var sector " "
+label define sectorcategories 1 "rent" ///
+	2 "basic public services" ///
+	3 "publicity & transaction services" ///
+	4 "management & support services" ///
+	5 "travel & transport services" ///
+	6 "financial services" ///
+	7 "miscallaneous services" ///
+	8 "maintenance & repair" ///
+	9 "chemical products" ///
+	10 "agricultural products & food" ///
+	11 "raw and construction materials" ///
+	12 "tools & equipment" ///
+	13 "materials for production" ///
+	14 "utensiles & other materials" /*(paper, cleaning products, wood, medical devices*/ /// 
+	15 "durable goods" /*(machines, electronics, furniture etc.) */  ///
+	16 "construction" ///
+	17 "preexisting property" ///
+	18 "nontangible property" ///
+	19 "transfers" ///
+	20 "salaries" 
+	 
+label values sector sectorcategories
+tab sector, missing
 
 
 ***********************************************************************
 * 	PART 5: generate firm occurence variable			
 ***********************************************************************
+/*
+
 sort firmid date_adjudicacion numero_procedimiento partida linea
 by firmid: gen firm_occurence = _n, a(firmid)
 format %5.0g firmid firm_occurence
@@ -193,7 +267,7 @@ forvalues i = 1/`n' {
 	
 }
 
-
+*/
 
 ***********************************************************************
 * 	Save the changes made to the data		  			

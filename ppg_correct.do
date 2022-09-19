@@ -483,6 +483,20 @@ preserve
 restore
 
 merge m:1 nombre_comprador using "${ppg_gender_lists}/missing_po_gender_coded", update replace
+/*
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                       987,416
+        from master                   987,416  (_merge==1)
+        from using                          0  (_merge==2)
+
+    Matched                            13,512
+        not updated                         0  (_merge==3)
+        missing updated                13,512  (_merge==4)
+        nonmissing conflict                 0  (_merge==5)
+    -----------------------------------------
+*/
+
 drop _merge
 
 
@@ -505,12 +519,28 @@ destring clasificacion_objeto, replace
 
 * merge
 merge m:1 clasificacion_objeto using "${ppg_product}/product", update replace
+/*
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                         3,012
+        from master                     2,858  (_merge==1)
+        from using                        154  (_merge==2)
+
+    Matched                           998,070
+        not updated                   998,070  (_merge==3)
+        missing updated                     0  (_merge==4)
+        nonmissing conflict                 0  (_merge==5)
+    -----------------------------------------
+*/
 drop if _merge == 2
 drop _merge
 
 * clean product classification description variable
 format %-50s clasificacion_objeto_des
 replace clasificacion_objeto_des= stritrim(strtrim(lower(clasificacion_objeto_des)))
+
+* lab variables
+lab var clasificacion_objeto_des "product description"
 
 ***********************************************************************
 * 	PART 8:  Categorisation of institutions	  			
@@ -548,33 +578,90 @@ forvalues i = 1/`n' {
 	local b : word `i' of `incorrect_names'
 	replace institucion = "`a'" if institucion == "`b'"
 }
-
-
 * merge
 merge m:1 institucion using "${ppg_institutions}/institutions", update replace
-*drop if _merge == 2
+/*
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                        60,707
+        from master                    60,512  (_merge==1)
+        from using                        195  (_merge==2)
+
+    Matched                           940,416
+        not updated                   940,416  (_merge==3)
+        missing updated                     0  (_merge==4)
+        nonmissing conflict                 0  (_merge==5)
+    -----------------------------------------
+*/
+drop if _merge == 2
 drop _merge
 
-* replace based on eyeballing Excel
-local institutions4 `" "comité cantonal de deportes y recreación de belén" "comité cantonal de deportes y recreación de san josé"  "compaÑÍa nacional de fuerza y luz sociedad anÓnima"  "direccion nacional de cen-cinai" "fideicomiso 872 ms-ctams-bncr" "fideicomiso de titularizacion inmobiliario ice - bcr" "fideicomiso fonatt jadgme - bcr" "fideicomiso fondo especial de migraciÓn jadgme - bcr" "fideicomiso fondo social migratorio jadgme - bcr"  "fideicomiso inmobiliario ccss bcr dos mil diecisiete" "ins inversiones sociedad administradora de fondos de inversion sociedad anonima"  "ins valores puesto de bolsa sociedad anonima" "instituto costarricense de investigacion y enseÑanza en nutricion y salud" "instituto de desarrollo profesional uladislao gÁmez solano" "instituto del café de costa rica" "instituto nacional de innovacion y transferencia en tecnologia agropecuaria" "junta administrativa de la dirección general de migración y extranjería" "museo arte y diseÑo contemporaneo" "compaÑÍa nacional de fuerza y luz sociedad anonima" "'
+	* instutions 5 = empresas publicas
+local institutions5 `" "compaÑÍa nacional de fuerza y luz sociedad anonima" "junta administrativa imprenta nacional" "fideicomiso 872 ms-ctams-bncr" "fideicomiso de titularizacion inmobiliario ice - bcr" "fideicomiso fonatt jadgme - bcr" "fideicomiso fondo especial de migracion jadgme - bcr" "fideicomiso fondo social migratorio jadgme - bcr" "fideicomiso inmobiliario ccss bcr dos mil diecisiete" "ins inversiones sociedad administradora de fondos de inversion sociedad anonima"  "ins valores puesto de bolsa sociedad anonima" "operadora de planes de pensiones complementarias del banco popular y de desarrollo comunal sociedad" "patronato de construcciones, instalaciones y adquisicion de bienes" "radiografica costarricense sociedad anonima" "superintendencia de telecomunicaciones" "banco bac san jose sociedad anonima" "'
+foreach institution of local institutions5 {
+	replace institucion_tipo = 5 if institucion == "`institution'"
+}
+
+
+* institutions 4 otro (comitees, funds, junta, councils)
+local institutions4 `" "comité cantonal de deportes y recreación de belén" "comité cantonal de deportes y recreación de san josé"  "direccion nacional de cen-cinai" "junta administrativa de la dirección general de migración y extranjería" "comision nacional de investigacion en salud" "comision nacional de vacunacion y epidemiologia" "consejo tecnico de aviacion civil" "direccion nacional de cen-cinai" "bcr pension operadora de planes de pensiones complementarias sociedad anonima" "junta administrativa del colegio tecnico profesional de ulloa - heredia" "consejo nacional para investigaciones cientificas y tecnologicas"   "'
+
 foreach institution of local institutions4 {
-	replace institucion_tipo = 4 if institucion == "`instituion'"
+	replace institucion_tipo = 4 if institucion == "`institution'"
 }
 
 
-local institutions2 `" "instituto costarricense de pesca y acuicultura"  "instituto nacional de seguros" "instituto tecnologico de costa rica" "'
+	* instutions 3 = municipalidades
+local institutions3 `" "municipalidad de jimenez de cartago" "municipalidad del canton de flores"  "'
+foreach institution of local institutions3 {
+	replace institucion_tipo = 3 if institucion == "`institution'"
+}
+
+
+	* institutions 2 = autonomas
+
+local institutions2 `" "instituto costarricense de pesca y acuicultura"  "instituto nacional de seguros" "instituto tecnologico de costa rica" "instituto de desarrollo profesional uladislao gÁmez solano" "instituto del café de costa rica" "instituto nacional de innovacion y transferencia en tecnologia agropecuaria" "instituto nacional de estadistica y censos" "instituto costarricense de investigacion y enseÑanza en nutricion y salud" "museo arte y diseÑo contemporaneo" "'
+
+foreach institution of local institutions2 {
+	replace institucion_tipo = 2 if institucion == "`institution'"
+}
+
+	* instutions 1 = gobierno central
+local institutions1 `" "contraloría general de la republica" "defensoría de los habitantes de la república" "operadora de pensiones complementarias y de capitalizacion laboral de la c.c.s.s."  "'
 foreach institution of local institutions1 {
-	replace institucion_tipo = 2 if institucion == "`instituion'"
+	replace institucion_tipo = 1 if institucion == "`institution'"
 }
 
 
-local institutions1 `" "contraloría general de la republica" "defensoría de los habitantes de la república"  "'
-foreach institution of local institutions1 {
-	replace institucion_tipo = 1 if institucion == "`instituion'"
-}
+
 
 * drop if not institution but some special contract payment
-drop if institucion == "contrato fideicomiso inmobiliario poder judicial 2015" | institucion == "contrato fideicomiso inmobiliario tribunal registral administrativo bcr 2014"
+drop if institucion == "contrato fideicomiso inmobiliario poder judicial 2015" | institucion == "contrato fideicomiso inmobiliario tribunal registral administrativo bcr 2014" | institucion == "fideicomiso inmobiliario ccss bcr dos mil diecisiete"
+
+* give the data a frame names
+/*
+frame copy default subtask, replace
+frame change subtask
+drop _freq
+contract institucion if institucion_tipo == .
+
+frame change default
+frame drop subtask
+*/
+
+
+***********************************************************************
+* 	PART 0:  Test whether administrative firm is a unique
+***********************************************************************
+	* firm id
+frame copy default subtask, replace
+frame change subtask
+drop _freq
+contract cedula_proveedor nombre_proveedor
+duplicates list cedula_proveedor
+* result: 0 observations are duplicates
+frame change default
+frame drop subtask
 
 
 

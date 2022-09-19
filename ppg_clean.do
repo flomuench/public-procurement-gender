@@ -33,10 +33,8 @@ rename *, lower
 ***********************************************************************
 * 	PART 2: 	Drop variables		  			
 ***********************************************************************
-/*drop firm_size firm_founded firm_registration firm_registro date_ca date_pu ///
-	date_contract_published date_contract_allocated firm_age_registro ///
-	firm_appearance
-*/
+drop cartel_no secuencia codigo_clasificacion
+
 ***********************************************************************
 * 	PART 3: 	Format string & numerical variables		  			
 ***********************************************************************
@@ -66,7 +64,32 @@ format %20.0fc `numvars'
 ***********************************************************************
 * 	PART 6: 	Label the variables		  			
 ***********************************************************************
-
+lab var ano "year"
+lab var numero_procedimiento "admin process number"
+lab var partida "admin. sub-process" 
+lab var linea "admin. product line" 
+lab var tipo_s "admin. process of contract allocation" 
+lab var monto_crc "contract value" 
+lab var institucion "public contracting institution" 
+lab var nombre_comprador "name of procurement officer" 
+lab var nombre_proveedor "name of bidder" 
+lab var persona_encargada_proveedor "name of firm representative"
+lab var clasificacion_objeto "UN procurement product classification code" 
+lab var clasifi_hacienda "Ministry of Finance product classification code" 
+lab var clasi_bien_serv "product type" 
+lab var cedula_proveedor "firm id"
+lab var fecha_constitucion "date when firm was formally created"
+lab var fecha_registro "date when firms was registered in e-procurement system"
+lab var fecha_publicacion "date when procurement contract was published"
+lab var precio_crc "unit price in Costa Rican Colon"
+lab var pais_domicilio "firm country of origin"
+lab var mejora_precio "process where firms could submit improved price"
+lab var codigo_postal "firm HQ postal code" 
+lab var fecha_adjudicacion "date of contract allocation" 
+lab var factor_evaluacion "contract evaluation criteria" 
+lab var cantidad "units of product" 
+lab var calificacion "points received for bid" 
+lab var bid_area "region were bidding was allowed"
 
 ***********************************************************************
 * 	PART 7: 	Label variables values	  			
@@ -79,6 +102,11 @@ lab val genderfo genderfirm
 			* procurement officer
 lab def genderofficer 0 "male officer" 1 "female officer"
 lab val genderpo genderofficer
+
+
+
+		* type of institutions
+	
 
 
 ***********************************************************************

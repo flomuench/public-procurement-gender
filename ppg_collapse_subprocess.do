@@ -1,9 +1,9 @@
 ***********************************************************************
-* 			create firm level data set public procurement gender								  		  
+* 			create sub-process level data set public procurement gender								  		  
 ***********************************************************************
 *																	  
-*	PURPOSE: analyze the effect of gender on success in public procure					  	  			
-*			ment
+*	PURPOSE: create analysis, sub-process level data set
+*			
 *																	  
 *	OUTLINE:														  
 *	1)		collapse data set on firm level				          
@@ -11,8 +11,8 @@
 *																	  													      
 *	Author:  	Florian Muench						    
 *	ID variable: 				  					  
-*	Requires: 	  	SICOP_gender_new_workingversion.dta									  
-*	Creates:  ml_inter.dta			                                  
+*	Requires: 	  	sicop_final.dta									  
+*	Creates:  		sicop_final_subprocess.dta			                                  
 ***********************************************************************
 * 	PART START: 	Format string & numerical variables		  			
 ***********************************************************************
@@ -30,11 +30,11 @@ foreach v of var * {
  }
 
 ***********************************************************************
-* 	PART 2: 	collapse data set on firm level		  			
+* 	PART 2: 	collapse data set on sub-process level	  			
 ***********************************************************************
 	* complication: gender of the firm rep is not stable over time
 		* solution: create an firm-gender specific id
-egen fgid = group(firmid female_firm)			
+egen sub_process_id = group(numero_procedimiento secuencia partida)			
 				/* control whether id has been correctly created by eye-balling the data
 		sort firmid fgid
 		browse fgid firmid nombre_proveedor genderfo female_firm persona_encargada_proveedor if ceof2m == 1
@@ -44,9 +44,8 @@ egen fgid = group(firmid female_firm)
 collapse (firstnm) age_registro firm_international female_firm  ///
 		firm_size1-firm_size5 firm_location1-firm_location7 ///
 		(sum) times_part=one times_won=winner    ///
-		(mean) avg_amount_won=monto_crc avg_price=precio avg_quantity=cantidad ///
-		avg_points=calificacion avg_comp=n_c ///
-		, by(fgid)
+		avg_amount_won=monto_crc avg_price=precio avg_quantity=cantidad ///
+		avg_points=calificacion, by(sub_process_id)
 
 ***********************************************************************
 * 	PART 3: 	label the variables in the new firm level data set	  			
@@ -80,4 +79,4 @@ label var avg_comp "mean competitors in bid"
 ***********************************************************************
 * 	PART END: 	Save firm level data set		  			
 ***********************************************************************
-save "${ppg_final}/sicop_firm", replace
+save "${ppg_final}/sicop_subprocess", replace

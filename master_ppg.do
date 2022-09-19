@@ -136,28 +136,41 @@ if (1) do "${ppg_github}/ppg_correct.do"
 ----------------------------------------------------------------------*/		
 if (1) do "${ppg_github}/ppg_generate.do"
 
-
-* insert here code to create the different leveled data sets for analysis
-
 ***********************************************************************
-* 	PART 4: 	Run descriptive statistics do files		  	
+* 	PART 5: 	Collapse into different level data sets  	
 ***********************************************************************
 /* --------------------------------------------------------------------
-	PART 4.1.: firm level statistics & balance table
-	Requires: sicop_replicable
+	PART 5.1: Collapse - remove criteria level
+	Requires: sicop_final
+	Creates:  sicop_final_subprocess
+----------------------------------------------------------------------*/		
+if (1) do "${ppg_github}/ppg_collapse_subprocess.do"
+/* --------------------------------------------------------------------
+	PART 5.2: Collapse - remove sub-processes and linea
+	Requires: sicop_final_subprocess
+	Creates:  sicop_final_process
+----------------------------------------------------------------------*/		
+if (1) do "${ppg_github}/ppg_collapse_process.do"
+
+***********************************************************************
+* 	PART 5: 	Run descriptive statistics do files		  	
+***********************************************************************
+/* --------------------------------------------------------------------
+	PART 5.1.: firm level statistics & balance table
+	Requires: sicop_final
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/		
 if (0) do "${ppg_github}/ppg_collapse_firm_level.do" 
 /* can be switched off to 0 after first run */
 /* --------------------------------------------------------------------
-	PART 4.2.: firm level statistics & balance table
+	PART 5.2.: firm level statistics & balance table
 	Requires: sicop_firm
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/
 if (0) do "${ppg_github}/ppg_firm_level_statistics.do"
 
 ***********************************************************************
-* 	PART 5: 	Regression analysis		  	
+* 	PART 6: 	Regression analysis		  	
 ***********************************************************************
 /* --------------------------------------------------------------------
 	PART 5.1.: multivariate regression analysis
