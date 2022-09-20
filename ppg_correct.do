@@ -663,8 +663,114 @@ duplicates list cedula_proveedor
 frame change default
 frame drop subtask
 
+***********************************************************************
+* 	PART 0:  harmonize spelling of evaluation factors
+***********************************************************************
+frame copy default subtask, replace
+frame change subtask
+
+drop _freq
+contract factor_evaluacion
+format %-75s factor_evaluacion
+gsort -_freq
+
+frame change default
+frame drop subtask
 
 
+replace factor_evaluacion = subinstr(factor_evaluacion, "é", "e",.)
+replace factor_evaluacion = subinstr(factor_evaluacion, "ó", "o",.)
+replace factor_evaluacion = subinstr(factor_evaluacion, "Ó", "o",.)
+replace factor_evaluacion = subinstr(factor_evaluacion, "í", "i",.)
+replace factor_evaluacion = subinstr(factor_evaluacion, "á", "a",.)
+replace factor_evaluacion = subinstr(factor_evaluacion, "Á", "a",.)
+replace factor_evaluacion = subinstr(factor_evaluacion, "ú", "u",.)
+replace factor_evaluacion = subinstr(factor_evaluacion, "ñ", "n",.)
+replace factor_evaluacion = subinstr(factor_evaluacion, "ü", "n",.)
+
+
+duplicates drop factor_evaluacion, force
+
+gen factor_evaluacion_des = factor_evaluacion
+format %-50s factor_evaluacion_des
+
+	* correct different spellings of 
+		* price
+local price_spellings `" "precio el menor" "menor precio" "precio mínimo" "precio menor gana" "precio mantenimiento preventivo" "descuento por monto de venta" "facturacion de equipos" "precio para el servicio tecnico" "monto de la partida presupuestaria asignada a la linea" "costo de los materiales" "'
+foreach x of local price_spellings { 
+	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "precio")
+}
+
+replace factor_evaluacion = regexr(factor_evaluacion, "[precio]", "precio")
+
+		* experience
+local experience_spellings `" "experiencia adicional" "experiencia adicional (proyectos)" "experiencia del oferente" "años de experiencia de la empresa" "experiencia de la empresa" "experiencia de la empresa en la prestación de servicios afines" "experiencia adicional (años)" "antigüedad de la empresa" "experiencia adicional del oferente (proyectos)" "experiencia empresa labores similares" "experiencia profesional" "experiencia del fabricante" "experiencia profesional labores similares" "experiencia en distribuciÓn de la marca del equipo ofertado" "cantidad de contratos similares" "experencia" "experiencia de la empresa u oferente" "experiencia en anos" "experiencia anos en el mercado" "experiencia cartas trabajos similares (2ptos x carta)" "experiencia de la empresa en trabajos similares" "experiencia del profesional" "experiencia de la empresa en ventas" "presencia en el mercado" "experiencia documentada de la empresa atinente al objeto contractual" "certificacion de experiencia" "experiencia adicional del profesional responsable (proyectos)" "experiencia del oferente adicional a la minima"  "'
+foreach x of local experience_spellings { 
+	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "experiencia")
+}
+
+		* delivery time
+local time_spellings `" "tiempo de entrega" "tiempo de entrega (en semanas)" "plazo" "plazo de entrega (formula)" "tiempo" "plazo de entrega (dias habiles)" "plazo entrega" "menor plazo de entrega" "'
+foreach x of local time_spellings { 
+	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "plazo de entrega")
+}
+
+		* Warranty
+local warranty_spellings `" "garantia" "garantía adicional" "garantía de producto" "garantía adicional para los equipos" "'
+foreach x of local warranty_spellings { 
+	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "garantía del producto")
+}
+
+		* Certification
+local certification_spellings `" "certificación o plan de manejo" "certificación iso 14001" "certificaciones" "certificado iso 50001" "oferente o producto que posea certificación vigente iso 14000, para alguno de los procesos internos de la empresa o que la empresa mediante acta notarial certifique que la misma desarrolla campañas de protección del medio ambiente" "oferente o producto que posea certificación vigente de alguna de las familias iso 9000, para alguno de los procesos internos de la empresa." "norma iso 9001" "norma iso 14001" "certificaciones ambientales" "certificacion de calidad" "norma iso 13485" "'
+foreach x of local certification_spellings { 
+	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "certificacion")
+}
+
+		* Local 
+local contributable_spellings `" "cotización en moneda nacional de costa rica" "cotización en moneda nacional"   "'
+foreach x of local contributable_spellings { 
+	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "domestic payments")
+}
+
+		* environmental criteria
+local environmental_spellings `" "criterio sustentable" "reconocimiento ambiental y social" "lista de iniciativa para reducción de la contaminación" "plan de manejo de residuos" "gestión ambiental del fabricante" "gestión ambiental" "plan de gestión integral de residuos (de conformidad con ley para la gestión integral de residuos n° 8839)" "protección al medio ambiente" "criterio ambiental" "contribuciÓn ambiental" "factores sustentables_ambientales" "plan de manejo de residuos solidos" "sellos ambientales" "producto biodegradable, no contaminante o de facil asimilacion por el planeta" "factores sustentables_sociales" "certificaciones ambientales y de calidad" "cumplimiento de manejo de reciclaje y tratamiento de desechos electronicos" "desempeno ambiental"   "'
+foreach x of local environmental_spellings { 
+	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "environmental performance")
+}
+
+		* social criteria
+condicion de discapacidad
+
+		* staff experience
+local staff_spellings `" "antigüedad del equipo propuesto" "experiencia del personal" "grado academico" "experiencia en docencia estudiantes universitarios" "experiencia en docencia de estudiantes secundaria"  "'
+foreach x of local staff_spellings { 
+	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "staff experience")
+}
+
+		* location
+distancia al evento, ubicación, ubicacion geografica del oferente
+
+		* national production
+fabricación nacional, proveedor local
+	
+		
+		* recommendation
+cartas de recomendaciÓn, carta de recomendacion, referencias comerciales
+		
+
+		* product quality
+
+		
+
+* new points
+atencion de pedidos urgentes sin cargo adicional
+calidad del producto
+servicios sin incumplimientos para el mep
+rendimiento cartuchos
+recargo por flete, flete-recargo
+visita al sitio, visita tecnica a sitio, visita pre – oferta al sitio de la obra (s)
+taller propio
 ***********************************************************************
 * 	Save the changes made to the data		  			
 ***********************************************************************

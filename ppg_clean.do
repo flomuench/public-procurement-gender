@@ -44,8 +44,13 @@ local strvars "`r(varlist)'"
 format %-15s `strvars'
 format %-25s numero_procedimiento persona_encargada_proveedor nombre_proveedor nombre_comprador
 format %-50s nombre_proveedor
-format %-35s persona_encargada_proveedor nombre_comprador
-format %-5s partida
+format %-35s persona_encargada_proveedor nombre_comprador institucion
+foreach x of var in varlist partida ano {
+	destring `x', replace
+	format %-5.0g `x'
+}
+format %-5.0g linea calificacion cantidad
+format %-15.0fc monto_crc precio_crc
  
 ds, has(type numeric) 
 local numvars "`r(varlist)'"
@@ -55,16 +60,18 @@ format %20.0fc `numvars'
 ***********************************************************************
 * 	PART 4: 	Order the variables in the data set		  			
 ***********************************************************************
+order numero_procedimiento partida linea nombre_proveedor cedula_proveedor factor_evaluacion calificacion institucion monto_crc cantidad precio_crc
  
 ***********************************************************************
 * 	PART 5: 	Rename the variables		  			
 ***********************************************************************
+rename ano year
 
 
 ***********************************************************************
 * 	PART 6: 	Label the variables		  			
 ***********************************************************************
-lab var ano "year"
+lab var year "year procurement process took place"
 lab var numero_procedimiento "admin process number"
 lab var partida "admin. sub-process" 
 lab var linea "admin. product line" 

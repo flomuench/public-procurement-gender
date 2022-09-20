@@ -164,13 +164,12 @@ label values sector sectorcategories
 tab sector, missing
 
 
+/*
 ***********************************************************************
 * 	PART 5: generate firm occurence variable			
 ***********************************************************************
-/*
-
-sort firmid date_adjudicacion numero_procedimiento partida linea
-by firmid: gen firm_occurence = _n, a(firmid)
+sort cedula_proveedor date_adjudicacion numero_procedimiento partida linea
+by cedula_proveedor: gen firm_occurence = _n, a(firmid)
 format %5.0g firmid firm_occurence
 
 ***********************************************************************

@@ -32,15 +32,34 @@ foreach v of var * {
 ***********************************************************************
 * 	PART 2: 	collapse data set on sub-process level	  			
 ***********************************************************************
-	* complication: gender of the firm rep is not stable over time
-		* solution: create an firm-gender specific id
-egen sub_process_id = group(numero_procedimiento secuencia partida)			
-				/* control whether id has been correctly created by eye-balling the data
-		sort firmid fgid
-		browse fgid firmid nombre_proveedor genderfo female_firm persona_encargada_proveedor if ceof2m == 1
-				*/
+	* create an id for each sub-process 
+egen sub_process_id = group(numero_procedimiento partida linea)
+egen sub_process_firm_id = group(numero_procedimiento partida linea cedula_proveedor)	
+order sub_process_id sub_process_firm_id, b(numero_procedimiento)
+/* example:
+sub_process_id	sub_process_firm_id	numero_procedimiento	partida	linea	nombre_proveedor	cedula_proveedor	factor_evaluacion	calificacion
+23	69	2011cd-000001-0001200001	1	1	mary cruz quiros fallas	111790304	precio	60
+23	69	2011cd-000001-0001200001	1	1	mary cruz quiros fallas	111790304	garantía de producto	20
+23	69	2011cd-000001-0001200001	1	1	mary cruz quiros fallas	111790304	experiencia	16
 
-		* collapse the data on firm-gender level
+*/
+	* reshape to remove firm-criteria level in sub-processes
+frame copy default subtask, replace
+frame change subtask
+
+reshape wide factor_evaluacion calificacion, i(sub_process_id) j(sub_process_firm_id)
+
+
+frame change default
+frame drop subtask
+
+	
+	* concatenate evaluation criteria
+
+
+	* remove duplicate process
+
+	* collapse the data on sub-process level
 collapse (firstnm) age_registro firm_international female_firm  ///
 		firm_size1-firm_size5 firm_location1-firm_location7 ///
 		(sum) times_part=one times_won=winner    ///
