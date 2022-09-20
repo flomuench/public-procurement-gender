@@ -163,6 +163,15 @@ label define sectorcategories 1 "rent" ///
 label values sector sectorcategories
 tab sector, missing
 
+***********************************************************************
+* 	PART 6:  Factor variable auction or contract allocation type
+***********************************************************************
+local varstocode "tipo_s institucion clasi_bien_serv mejora_precio"
+foreach x of local varstocode {
+	encode `x', gen(`x'1)
+	drop `x'
+	rename `x'1 `x'
+}
 
 /*
 ***********************************************************************

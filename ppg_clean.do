@@ -27,9 +27,6 @@ use "${ppg_intermediate}/sicop_replicable", clear
 rename TIPO tipo_s
 rename *, lower
 
-
-
-
 ***********************************************************************
 * 	PART 2: 	Drop variables		  			
 ***********************************************************************
@@ -45,11 +42,10 @@ format %-15s `strvars'
 format %-25s numero_procedimiento persona_encargada_proveedor nombre_proveedor nombre_comprador
 format %-50s nombre_proveedor
 format %-35s persona_encargada_proveedor nombre_comprador institucion
-foreach x of var in varlist partida ano {
+foreach x of varlist partida ano {
 	destring `x', replace
-	format %-5.0g `x'
 }
-format %-5.0g linea calificacion cantidad
+format %-5.0g partida linea calificacion cantidad
 format %-15.0fc monto_crc precio_crc
  
 ds, has(type numeric) 
@@ -110,18 +106,6 @@ lab val genderfo genderfirm
 lab def genderofficer 0 "male officer" 1 "female officer"
 lab val genderpo genderofficer
 
-
-
-		* type of institutions
-	
-
-
-***********************************************************************
-* 	PART 8: create a codebook
-***********************************************************************
-cd "$ppg_data"
-export excel ppg_codebook_variables in 1/1, firstrow(variables) replace
-export excel ppg_codebook_labels in 1/1, firstrow(varlabels) replace
 
 ***********************************************************************
 * 	Save the changes made to the data		  			

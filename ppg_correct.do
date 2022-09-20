@@ -638,6 +638,10 @@ foreach institution of local institutions1 {
 * drop if not institution but some special contract payment
 drop if institucion == "contrato fideicomiso inmobiliario poder judicial 2015" | institucion == "contrato fideicomiso inmobiliario tribunal registral administrativo bcr 2014" | institucion == "fideicomiso inmobiliario ccss bcr dos mil diecisiete"
 
+lab def institution_type 1 "central government" 2 "semi-independent institutions" 3 "city councils" 4 "other government agencies" 5 "state-owned enterprise"
+lab val institucion_tipo institution_type
+
+
 * give the data a frame names
 /*
 frame copy default subtask, replace
@@ -651,7 +655,7 @@ frame drop subtask
 
 
 ***********************************************************************
-* 	PART 0:  Test whether administrative firm is a unique
+* 	PART 9:  Test whether administrative firm is a unique
 ***********************************************************************
 	* firm id
 frame copy default subtask, replace
@@ -664,8 +668,9 @@ frame change default
 frame drop subtask
 
 ***********************************************************************
-* 	PART 0:  harmonize spelling of evaluation factors
+* 	PART 10:  harmonize spelling of evaluation factors
 ***********************************************************************
+/* identify different overarching evaluation categories
 frame copy default subtask, replace
 frame change subtask
 
@@ -674,103 +679,178 @@ contract factor_evaluacion
 format %-75s factor_evaluacion
 gsort -_freq
 
-frame change default
-frame drop subtask
+*frame change default
+*frame drop subtask
+*/
+		* remove special symbols (from all string variables)
+ds, has(type string) 
+local strvars "`r(varlist)'"
+foreach x of local strvars {
+	replace `x' = subinstr(`x', "é", "e",.)
+	replace `x' = subinstr(`x', "ó", "o",.)
+	replace `x' = subinstr(`x', "Ó", "o",.)
+	replace `x' = subinstr(`x', "Í", "i",.)
+	replace `x' = subinstr(`x', "í", "i",.)
+	replace `x' = subinstr(`x', "á", "a",.)
+	replace `x' = subinstr(`x', "Á", "a",.)
+	replace `x' = subinstr(`x', "Ú", "u",.)
+	replace `x' = subinstr(`x', "ú", "u",.)
+	replace `x' = subinstr(`x', "Ñ", "n",.)
+	replace `x' = subinstr(`x', "ñ", "n",.)
+	replace `x' = subinstr(`x', "ü", "u",.)
+	replace `x' = subinstr(`x', "É", "u",.)
+}
+*duplicates drop factor_evaluacion, force
 
-
-replace factor_evaluacion = subinstr(factor_evaluacion, "é", "e",.)
-replace factor_evaluacion = subinstr(factor_evaluacion, "ó", "o",.)
-replace factor_evaluacion = subinstr(factor_evaluacion, "Ó", "o",.)
-replace factor_evaluacion = subinstr(factor_evaluacion, "í", "i",.)
-replace factor_evaluacion = subinstr(factor_evaluacion, "á", "a",.)
-replace factor_evaluacion = subinstr(factor_evaluacion, "Á", "a",.)
-replace factor_evaluacion = subinstr(factor_evaluacion, "ú", "u",.)
-replace factor_evaluacion = subinstr(factor_evaluacion, "ñ", "n",.)
-replace factor_evaluacion = subinstr(factor_evaluacion, "ü", "n",.)
-
-
-duplicates drop factor_evaluacion, force
-
-gen factor_evaluacion_des = factor_evaluacion
-format %-50s factor_evaluacion_des
+	* create new categorical with evaluation criteria
+gen factor_evaluacion_cat = ""
+format %-25s factor_evaluacion_cat
 
 	* correct different spellings of 
 		* price
+			* use regexp to create dummy
+gen category = regexm(factor_evaluacion, "precio|costo"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "price" if category == 1
+
+
 local price_spellings `" "precio el menor" "menor precio" "precio mínimo" "precio menor gana" "precio mantenimiento preventivo" "descuento por monto de venta" "facturacion de equipos" "precio para el servicio tecnico" "monto de la partida presupuestaria asignada a la linea" "costo de los materiales" "'
 foreach x of local price_spellings { 
-	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "precio")
+	replace factor_evaluacion_cat = "price" if factor_evaluacion == "x" 
 }
 
-replace factor_evaluacion = regexr(factor_evaluacion, "[precio]", "precio")
+drop category
 
 		* experience
-local experience_spellings `" "experiencia adicional" "experiencia adicional (proyectos)" "experiencia del oferente" "años de experiencia de la empresa" "experiencia de la empresa" "experiencia de la empresa en la prestación de servicios afines" "experiencia adicional (años)" "antigüedad de la empresa" "experiencia adicional del oferente (proyectos)" "experiencia empresa labores similares" "experiencia profesional" "experiencia del fabricante" "experiencia profesional labores similares" "experiencia en distribuciÓn de la marca del equipo ofertado" "cantidad de contratos similares" "experencia" "experiencia de la empresa u oferente" "experiencia en anos" "experiencia anos en el mercado" "experiencia cartas trabajos similares (2ptos x carta)" "experiencia de la empresa en trabajos similares" "experiencia del profesional" "experiencia de la empresa en ventas" "presencia en el mercado" "experiencia documentada de la empresa atinente al objeto contractual" "certificacion de experiencia" "experiencia adicional del profesional responsable (proyectos)" "experiencia del oferente adicional a la minima"  "'
+			* use regexp to create dummy
+gen category = regexm(factor_evaluacion, "experiencia|antiguedad|antecedente|constancia|mercado|cantidad|facturacion|descuento|proyectos|contratos"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "experience" if category == 1
+
+			* manual replacements
+local experience_spellings `" "experiencia adicional" "experiencia adicional (proyectos)" "experiencia del oferente" "años de experiencia de la empresa" "experiencia de la empresa" "experiencia de la empresa en la prestacion de servicios afines" "experiencia adicional (años)" "antiguedad de la empresa" "experiencia adicional del oferente (proyectos)" "experiencia empresa labores similares" "experiencia profesional" "experiencia del fabricante" "experiencia profesional labores similares" "experiencia en distribucion de la marca del equipo ofertado" "cantidad de contratos similares" "experencia" "experiencia de la empresa u oferente" "experiencia en anos" "experiencia anos en el mercado" "experiencia cartas trabajos similares (2ptos x carta)" "experiencia de la empresa en trabajos similares" "experiencia del profesional" "experiencia de la empresa en ventas" "presencia en el mercado" "experiencia documentada de la empresa atinente al objeto contractual" "certificacion de experiencia" "experiencia adicional del profesional responsable (proyectos)" "experiencia del oferente adicional a la minima" "portafolio de proyectos realizados" "cantidad de proyectos realizados por la empresa en trabajos similares (obra)"  "experencia" "'
 foreach x of local experience_spellings { 
-	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "experiencia")
+	replace factor_evaluacion_cat = "experience" if factor_evaluacion == "x" 
 }
+drop category
 
 		* delivery time
+gen category = regexm(factor_evaluacion, "plazo|tiempo|entraga"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "delivery time" if category == 1
+
+		* manual replacements
 local time_spellings `" "tiempo de entrega" "tiempo de entrega (en semanas)" "plazo" "plazo de entrega (formula)" "tiempo" "plazo de entrega (dias habiles)" "plazo entrega" "menor plazo de entrega" "'
 foreach x of local time_spellings { 
-	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "plazo de entrega")
+	replace factor_evaluacion_cat = "delivery time" if factor_evaluacion == "x" 
 }
+drop category
 
 		* Warranty
-local warranty_spellings `" "garantia" "garantía adicional" "garantía de producto" "garantía adicional para los equipos" "'
+gen category = regexm(factor_evaluacion, "garantia"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "warranty" if category == 1		
+		
+local warranty_spellings `" "garantia" "garantia adicional" "garantia de producto" "garantia adicional para los equipos" "'
 foreach x of local warranty_spellings { 
-	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "garantía del producto")
+	replace factor_evaluacion_cat = "warranty" if factor_evaluacion == "x" 
 }
+drop category
 
 		* Certification
-local certification_spellings `" "certificación o plan de manejo" "certificación iso 14001" "certificaciones" "certificado iso 50001" "oferente o producto que posea certificación vigente iso 14000, para alguno de los procesos internos de la empresa o que la empresa mediante acta notarial certifique que la misma desarrolla campañas de protección del medio ambiente" "oferente o producto que posea certificación vigente de alguna de las familias iso 9000, para alguno de los procesos internos de la empresa." "norma iso 9001" "norma iso 14001" "certificaciones ambientales" "certificacion de calidad" "norma iso 13485" "'
-foreach x of local certification_spellings { 
-	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "certificacion")
-}
+gen category = regexm(factor_evaluacion, "certificacion|norma|certificado|iso"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "certification" if category == 1	
 
-		* Local 
-local contributable_spellings `" "cotización en moneda nacional de costa rica" "cotización en moneda nacional"   "'
-foreach x of local contributable_spellings { 
-	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "domestic payments")
+local certification_spellings `" "certificacion o plan de manejo" "certificacion iso 14001" "certificaciones" "certificado iso 50001" "oferente o producto que posea certificacion vigente iso 14000, para alguno de los procesos internos de la empresa o que la empresa mediante acta notarial certifique que la misma desarrolla campañas de proteccion del medio ambiente" "oferente o producto que posea certificacion vigente de alguna de las familias iso 9000, para alguno de los procesos internos de la empresa." "norma iso 9001" "norma iso 14001" "certificaciones ambientales" "certificacion de calidad" "norma iso 13485" "proyectos ejecutados" "contratos adjudicados" "'
+foreach x of local certification_spellings { 
+	replace factor_evaluacion_cat = "certification" if factor_evaluacion == "x" 
 }
+drop category
+
+		* Local contributions, installments
+gen category = regexm(factor_evaluacion, "cotizacion|cotizar"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "domestic contributive payments" if category == 1
+local contributable_spellings `" "cotizacion en moneda nacional de costa rica" "cotizacion en moneda nacional"   "'
+foreach x of local contributable_spellings { 
+	replace factor_evaluacion_cat = "domestic contributive payments" if factor_evaluacion == "x" 
+}
+drop category
 
 		* environmental criteria
-local environmental_spellings `" "criterio sustentable" "reconocimiento ambiental y social" "lista de iniciativa para reducción de la contaminación" "plan de manejo de residuos" "gestión ambiental del fabricante" "gestión ambiental" "plan de gestión integral de residuos (de conformidad con ley para la gestión integral de residuos n° 8839)" "protección al medio ambiente" "criterio ambiental" "contribuciÓn ambiental" "factores sustentables_ambientales" "plan de manejo de residuos solidos" "sellos ambientales" "producto biodegradable, no contaminante o de facil asimilacion por el planeta" "factores sustentables_sociales" "certificaciones ambientales y de calidad" "cumplimiento de manejo de reciclaje y tratamiento de desechos electronicos" "desempeno ambiental"   "'
+gen category = regexm(factor_evaluacion, "ambiente|ambiental|sustentable|residuos|reciclaje|contaminacion|desechos|eco-eficiencia|consumo energetico|solar"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "environmental criteria" if category == 1
+
+local environmental_spellings `" "criterio sustentable" "reconocimiento ambiental y social" "lista de iniciativa para reduccion de la contaminacion" "plan de manejo de residuos" "gestion ambiental del fabricante" "gestion ambiental" "plan de gestion integral de residuos (de conformidad con ley para la gestion integral de residuos n° 8839)" "proteccion al medio ambiente" "criterio ambiental" "contribucion ambiental" "factores sustentables_ambientales" "plan de manejo de residuos solidos" "sellos ambientales" "producto biodegradable, no contaminante o de facil asimilacion por el planeta" "factores sustentables_sociales" "certificaciones ambientales y de calidad" "cumplimiento de manejo de reciclaje y tratamiento de desechos electronicos" "desempeno ambiental" "refrigerantes naturales"   "'
 foreach x of local environmental_spellings { 
-	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "environmental performance")
+	replace factor_evaluacion_cat = "environmental criteria" if factor_evaluacion == "x" 
 }
+drop category
+
+		* skilled staff 
+gen category = regexm(factor_evaluacion, "personal|academico|academica|cantidad de tecnicos certificados"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "quality" if category == 1
+drop category
 
 		* social criteria
-condicion de discapacidad
+gen category = regexm(factor_evaluacion, "discapacidad|social|personal mayor de 50|pyme|accesibilidad|seguridad|salud|sostenibilidad|producto verde"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "social criteria" if category == 1
+drop category
 
-		* staff experience
-local staff_spellings `" "antigüedad del equipo propuesto" "experiencia del personal" "grado academico" "experiencia en docencia estudiantes universitarios" "experiencia en docencia de estudiantes secundaria"  "'
-foreach x of local staff_spellings { 
-	replace factor_evaluacion = regexr(factor_evaluacion, "`x'", "staff experience")
-}
+		* recommendation
+gen category = regexm(factor_evaluacion, "referencia|recomendacion"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "recommendation" if category == 1
+drop category
+
 
 		* location
-distancia al evento, ubicación, ubicacion geografica del oferente
+gen category = regexm(factor_evaluacion, "distancia|ubicacion"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "geographically close" if category == 1
+drop category
 
 		* national production
-fabricación nacional, proveedor local
+gen category = regexm(factor_evaluacion, "proveedor local|fabricacion nacional|marca pais"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "national or local production" if category == 1
+drop category
 	
-		
-		* recommendation
-cartas de recomendaciÓn, carta de recomendacion, referencias comerciales
-		
 
 		* product quality
+gen category = regexm(factor_evaluacion, "calidad"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "quality" if category == 1
+drop category
 
+
+		* site visits
+gen category = regexm(factor_evaluacion, "visita"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "quality" if category == 1
+drop category
+
+		* financial situation of suppliers
+gen category = regexm(factor_evaluacion, "financiera|situacion del proveedor"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "quality" if category == 1
+drop category
+
+		* maintement
+gen category = regexm(factor_evaluacion, "mantimiento|sustitucion|taller propio"), a(factor_evaluacion)
+replace factor_evaluacion_cat = "quality" if category == 1
+drop category
 		
+		* otros
+replace factor_evaluacion_cat = "other" if factor_evaluacion_cat == ""
 
-* new points
-atencion de pedidos urgentes sin cargo adicional
-calidad del producto
-servicios sin incumplimientos para el mep
-rendimiento cartuchos
-recargo por flete, flete-recargo
-visita al sitio, visita tecnica a sitio, visita pre – oferta al sitio de la obra (s)
-taller propio
+tab factor_evaluacion_cat /*2% are in other category, implying 98% covered in the 12 formed categories*/
+
+***********************************************************************
+* 	PART 11:  remove duplicates
+***********************************************************************
+	* search for duplicates
+duplicates report numero_procedimiento partida linea cedula_proveedor factor_evaluacion
+duplicates tag numero_procedimiento partida linea cedula_proveedor factor_evaluacion, gen(suspicion)
+br if suspicion > 0 /* eyeballing suggests that these are real duplicates */
+
+
+	* remove duplicates
+duplicates drop numero_procedimiento partida linea cedula_proveedor factor_evaluacion, force
+*(13,895 observations deleted)
+sort numero_procedimiento partida linea cedula_proveedor factor_evaluacion
+duplicates report numero_procedimiento partida linea cedula_proveedor factor_evaluacion
+drop suspicion
+
 ***********************************************************************
 * 	Save the changes made to the data		  			
 ***********************************************************************
