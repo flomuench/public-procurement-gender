@@ -20,8 +20,25 @@ use "${ppg_final}/sicop_subprocess", clear
 
 
 ***********************************************************************
-* 	PART START: 	time series of procurement volume		  			
+* 	PART START: 	time series of procurement volume + procecesses		  			
 ***********************************************************************
+	* create a seperate frame
+frame copy default subtask, replace
+frame change subtask
+
+	* generate variable that can be used to visualize the number of processes per month
+bysort numero_procedimiento: gen process_count = _n == 1, a(numero_procedimiento)
+
+
+
+	* collape to monthly or annual procurement volume
+* useful link: https://stats.oarc.ucla.edu/stata/faq/how-can-i-collapse-a-daily-time-series-to-a-monthly-time-series/
+* help dcfcns
+		* monthly
+gen dm_adj = mofd(date_adjudicacion), a(date_adjudicacion)
+format dm_adj %tm
+collapse (sum) monto_crc process_count (mean) n_competitors, by(dm_adj)
+
 	* change to time series format
 tsset date_adjudicacion
 	
@@ -31,7 +48,10 @@ tsset date_adjudicacion
 	
 	* female vs. male firms
 	
-	
+
+	* drop frame
+frame change default
+frame drop subtask
 	
 ***********************************************************************
 * 	PART START: 	Plot dependent variables: (1) monto	  			

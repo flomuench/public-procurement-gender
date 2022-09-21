@@ -26,20 +26,23 @@ use "${ppg_intermediate}/sicop_replicable", clear
 
 
 ***********************************************************************
-* 	PART 0:  create Stata recognized date variables			
+* 	PART 0:  create an id for each sub-process
 ***********************************************************************
-* browse id numero_procedimiento year fecha_publicacion fecha_adjudicacion partida linea nombre_proveedor firmid 
+egen sub_process_id = group(numero_procedimiento partida linea)
+egen sub_process_firm_id = group(numero_procedimiento partida linea cedula_proveedor)
+format sub_process_id sub_process_firm_id %-12.0fc
 
+order sub_process_id sub_process_firm_id, b(numero_procedimiento)
+
+***********************************************************************
+* 	PART 1: create Stata recognized date variables + generate age variables			
+***********************************************************************
 	* create Stata recognized time variables to create a running event variable
 local fechas "publicacion adjudicacion registro"
 foreach x of local fechas {
 gen date_`x' = clock(fecha_`x', "DM20Yhms"), a(fecha_`x')
 format date_`x' %tc
 }
-
-***********************************************************************
-* 	PART 1:  generate age variables			
-***********************************************************************
 	* create year variables for the year of publication, 
 		* execution of the bid & firm registration
 local dates "publicacion adjudicacion registro"
@@ -173,6 +176,17 @@ foreach x of local varstocode {
 	rename `x'1 `x'
 }
 
+***********************************************************************
+* 	PART 7:  Number of competitors
+***********************************************************************
+gen one = 1
+egen n_competitors = sum(one), by(sub_process_id)
+order n_competitors, a(cedula_proveedor)
+lab var n_competitors "number of other bidding firms"
+
+
+
+
 /*
 ***********************************************************************
 * 	PART 5: generate firm occurence variable			
@@ -281,3 +295,5 @@ forvalues i = 1/`n' {
 * 	Save the changes made to the data		  			
 ***********************************************************************
 save "${ppg_final}/sicop_final", replace
+erase "${ppg_intermediate}/sicop_replicable" /* erase intermediate file to save storage space */
+

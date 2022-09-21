@@ -21,13 +21,8 @@ use "${ppg_final}/sicop_final", clear
 ***********************************************************************
 * 	PART 2: 	collapse data set on sub-process level	  			
 ***********************************************************************
-	* create an id for each sub-process 
-egen sub_process_id = group(numero_procedimiento partida linea)
-egen sub_process_firm_id = group(numero_procedimiento partida linea cedula_proveedor)
-format sub_process_id sub_process_firm_id %-12.0fc
-
-order sub_process_id sub_process_firm_id, b(numero_procedimiento)
 sort sub_process_firm_id
+* browse id numero_procedimiento year fecha_publicacion fecha_adjudicacion partida linea nombre_proveedor firmid 
 /* example:
 sub_process_id	sub_process_firm_id	numero_procedimiento	partida	linea	nombre_proveedor	cedula_proveedor	factor_evaluacion	calificacion
 23	69	2011cd-000001-0001200001	1	1	mary cruz quiros fallas	111790304	precio	60

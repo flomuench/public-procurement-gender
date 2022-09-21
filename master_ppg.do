@@ -19,13 +19,12 @@
 ***********************************************************************
 
 	* set standard settings
-version 15
+version 17
 clear all
 graph drop _all
 scalar drop _all
 set more off
 set graphics on /* switch off to on to display graphs */
-capture program drop zscore /* drops the program programname */
 qui cap log c
 set varabbrev off /* avoid wrong variable gets selected */
 
@@ -40,6 +39,7 @@ set varabbrev off /* avoid wrong variable gets selected */
 *net install grc1leg,from( http://www.stata.com/users/vwiggins/)
 ssc install freqindex
 ssc install matchit
+ssc install winsor2, replace
 	
 */
 
@@ -56,7 +56,7 @@ set sortseed 01092022
 
 		* globals: dynamic folder paths
 
-if "`c(username)'" == "ASUS"{
+if "`c(username)'" == "ASUS" {
 		global ppg_gdrive = "G:/Meine Ablage/Public Procurement and Gender"
 }
 else{
