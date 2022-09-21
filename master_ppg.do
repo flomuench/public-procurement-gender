@@ -150,20 +150,30 @@ if (1) do "${ppg_github}/ppg_collapse_subprocess.do"
 	Requires: sicop_final_subprocess
 	Creates:  sicop_final_process
 ----------------------------------------------------------------------*/		
-if (1) do "${ppg_github}/ppg_collapse_process.do"
+if (0) do "${ppg_github}/ppg_collapse_process.do"
+/* --------------------------------------------------------------------
+	PART 5.2: Collapse - remove sub-processes and linea
+	Requires: sicop_final_subprocess
+	Creates:  sicop_firm
+----------------------------------------------------------------------*/		
+if (0) do "${ppg_github}/ppg_collapse_firm.do"
 
 ***********************************************************************
 * 	PART 5: 	Run descriptive statistics do files		  	
 ***********************************************************************
 /* --------------------------------------------------------------------
 	PART 5.1.: firm level statistics & balance table
+	Requires: sicop_process
+----------------------------------------------------------------------*/		
+if (0) do "${ppg_github}/ppg_descriptive_statistics.do" 
+/* --------------------------------------------------------------------
+	PART 5.2.: firm level statistics & balance table
 	Requires: sicop_final
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/		
 if (0) do "${ppg_github}/ppg_collapse_firm_level.do" 
-/* can be switched off to 0 after first run */
 /* --------------------------------------------------------------------
-	PART 5.2.: firm level statistics & balance table
+	PART 5.3.: firm level statistics & balance table
 	Requires: sicop_firm
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/
