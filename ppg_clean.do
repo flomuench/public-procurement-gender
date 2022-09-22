@@ -46,7 +46,7 @@ foreach x of varlist partida ano {
 	destring `x', replace
 }
 format %-5.0g partida linea calificacion cantidad
-format %-15.0fc monto_crc precio_crc
+format %-15.3fc monto_crc precio_crc
  
 ds, has(type numeric) 
 local numvars "`r(varlist)'"

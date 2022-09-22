@@ -185,7 +185,65 @@ order n_competitors, a(cedula_proveedor)
 lab var n_competitors "number of other bidding firms"
 
 
+***********************************************************************
+* 	PART 7:  gen variable with US dollar instead of Costa Rican Colones amount
+***********************************************************************
+		* create empty variable that will hold US dollar amounts
+gen monto_usd = ., a(monto_crc)
+		* put all years into local
+local year `" "2010" "2011" "2012" "2013" "2014" "2015" "2016" "2017" "2018" "2019" "'
+		* put exchange rates for specific year into local
+local exchange_rate `" "525" "505" "502" "499" "538" "534" "544" "567" "576" "587"  "'
 
+		* loop over each year and replace US amount 
+local n : word count `year'
+forvalues i = 1/`n' {
+	local a : word `i' of `year'
+	local b : word `i' of `exchange_rate'
+	replace monto_usd = monto_crc/ `b' if year == `a'
+}
+
+format monto_usd %-15.3fc
+
+***********************************************************************
+* 	PART 8:  winsorized + log-transform amount values to account for outliers --> see also ppg_descriptive_statistics
+***********************************************************************
+	* winsorize
+local currencies "usd crc"
+foreach cur of local currencies {
+	winsor2 monto_`cur', suffix(_w) cuts(1 99)
+	format %-15.3fc monto_`cur'_w
+	order monto_`cur'_w, a(monto_`cur')
+	lab var monto_`cur'_w "winsorized amount in `cur'"
+
+}
+
+	* log-transform
+local currencies "usd crc"
+foreach cur of local currencies {
+	gen monto_`cur'_wlog = log(monto_`cur'_w), a(monto_`cur'_w)
+	format %-15.3fc monto_`cur'_wlog
+	lab var monto_`cur'_w "winsorized log of amount in `cur'"
+}
+
+***********************************************************************
+* 	PART 9: gen dependent variable: dummy bid won  
+***********************************************************************
+gen bid_won = 0, a(monto_crc)
+replace bid_won = 1 if monto_crc != .
+lab var bid_won "firm won bid"
+
+***********************************************************************
+* 	PART 10: gen dummy for bid-level procurement officer-firm representative gender combinations
+***********************************************************************
+gen gender_combi = . 
+	replace gender_combi = 1 if genderpo == 1 & genderfo == 1
+	replace gender_combi = 2 if genderpo == 1 & genderfo == 0
+	replace gender_combi = 3 if genderpo == 0 & genderfo == 1
+	replace gender_combi = 4 if genderpo == 0 & genderfo == 0
+lab def combis 1 "PO female - FR female" 2 "PO female - FR male" 3 "PO male - FR female" 4 "PO male - FR male"
+lab val gender_combi combis
+tab gender_combi, gen(combi)
 
 /*
 ***********************************************************************
