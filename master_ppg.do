@@ -44,7 +44,7 @@ ssc install winsor2, replace
 */
 
 	* define graph scheme for visual outputs
-set scheme plotplain
+set scheme plotplainblind
 
 	* set seeds for replication
 set seed 01092022

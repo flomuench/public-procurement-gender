@@ -295,5 +295,5 @@ forvalues i = 1/`n' {
 * 	Save the changes made to the data		  			
 ***********************************************************************
 save "${ppg_final}/sicop_final", replace
-erase "${ppg_intermediate}/sicop_replicable" /* erase intermediate file to save storage space */
+erase "${ppg_intermediate}/sicop_replicable.dta" /* erase intermediate file to save storage space */
 
