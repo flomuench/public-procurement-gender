@@ -74,6 +74,7 @@ lab var linea "admin. product line"
 lab var tipo_s "admin. process of contract allocation" 
 lab var monto_crc "contract value" 
 lab var institucion "public contracting institution" 
+lab var institucion_tipo "public contracting institution, category" 
 lab var nombre_comprador "name of procurement officer" 
 lab var nombre_proveedor "name of bidder" 
 lab var persona_encargada_proveedor "name of firm representative"
@@ -105,6 +106,10 @@ lab val genderfo genderfirm
 			* procurement officer
 lab def genderofficer 0 "male officer" 1 "female officer"
 lab val genderpo genderofficer
+
+		* institution
+lab def instutions 1 "central government" 2 "independent institutions" 3 "municipalities" 4 "semi-independent institutions" 5 "state-owned enterprises"
+lab val institucion_tipo institutions
 
 
 ***********************************************************************

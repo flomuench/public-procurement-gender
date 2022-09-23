@@ -156,13 +156,6 @@ gr export "${ppg_descriptive_statistics}/monto_distribution.png", replace
 ***********************************************************************
 * 	PART 3: 	Plot dependent variables: (2) points  			
 ***********************************************************************
-	* create total points
-*order calificacion?, last
-*order calificacion10-calificacion14, a(calificacion9)
-local c "calificacion"
-egen total_points = rowtotal(`c'1 `c'2 `c'3 `c'4 `c'5 `c'6 `c'7 `c'8 `c'9 `c'10 `c'11 `c'12 `c'13 `c'14 ), missing /* missing --> if all MV, results in MV instead of zero*/
-order total_points, b(calificacion1)
-
 	* plot total points by gender 
 		* all the firms
 twoway ///
@@ -303,10 +296,86 @@ gr export "${ppg_descriptive_statistics}/gender_combis.png", replace
 ***********************************************************************
 * most frequent institutions
 * gender distribution across institutions? Do we care? Idk. Products likely more important.
+		* create a seperate frame
+frame copy default subtask, replace
+frame change subtask
+
+	* how many institutions are there in total?
+codebook institucion /* 168 */
+
+
+	* collapse on institutional level to facilitate visualisation & avoid double counting
+collapse (sum) one monto_usd monto_usd_wlog (firstnm) institucion_tipo, by(institucion)
+lab var one "bids managed"
+lab var monto_usd "procurement value"
+lab def instutions 1 "central government" 2 "independent institutions" 3 "municipalities" 4 "semi-independent institutions" 5 "state-owned enterprises"
+lab val institucion_tipo institution_type
+
+	* in terms of occurrence
+			* Institutional categories
+graph bar (sum) one, over(institucion_tipo, sort(1) lab(angle(45))) ///
+	blabel(bar, format(%-12.2fc)) ///
+	ytitle("bids managed") ///
+	ylabel(, nogrid) ///
+	name(institution_type_bid, replace)
+gr export "${ppg_descriptive_statistics}/institution_type_bid.png", replace
+
+	
+graph bar (sum) monto_usd, over(institucion_tipo, sort(1) lab(angle(45))) ///
+	blabel(bar, format(%-15.0fc)) ///
+	ytitle("procurement value allocated, USD") ///
+	ylabel(, nogrid) ///
+	name(institution_type_bid, replace)
+gr export "${ppg_descriptive_statistics}/institution_type_amount.png", replace
+	
+			* biggest single institutional contractors
+gsort -one
+graph bar (sum) one in 1/15, over(institucion, sort(1) lab(angle(45))) ///
+	ytitle("bids managed") ///
+	ylabel(0(50000)250000, nogrid format(%-9.0fc)) ///
+	name(institution_bid, replace)
+gr export "${ppg_descriptive_statistics}/institution_bid.png", replace
+	
+gsort -monto_usd
+graph bar (sum) monto_usd in 1/15, over(institucion, sort(1) lab(angle(45))) ///
+	ytitle("procurement value allocated, USD") ///
+	ylabel(0(200000000)600000000, nogrid format(%-12.0fc)) ///
+	name(institution_amount, replace)
+gr export "${ppg_descriptive_statistics}/institution_amount.png", replace
+
+	
+			* number of competitors per institution
+	
+	
+frame change default
+frame drop subtask
 
 ***********************************************************************
 * 	PART 8: 	Plot independent variables: (3) main products
 ***********************************************************************
+* general product type: goods, services?
+graph bar (sum) monto_usd, over(clasi_bien_serv, sort(1) lab(angle(45))) ///
+	blabel(bar, format(%-15.0fc) size(medium)) ///
+	ytitle("total procurement value, USD") ///
+	ylabel(, nogrid format(%-15.0fc)) ///
+	name(product_type_amount, replace)
+gr export "${ppg_descriptive_statistics}/product_type_amount.png", replace
+
+* larger sectors, type of products
+	* frequency
+graph bar (sum) one, over(sector, sort(1) lab(angle(45))) ///
+	blabel(bar, format(%-10.0fc) size(vsmall)) ///
+	ytitle("number of bids") ///
+	ylabel(, nogrid format(%-12.0fc)) ///
+	
+	* amount
+graph bar (sum) monto_usd, over(sector, sort(1) lab(angle(45))) ///
+	blabel(bar, format(%-15.0fc) size(small)) ///
+	ytitle("total procurement value, USD") ///
+	ylabel(, nogrid format(%-15.0fc)) ///
+	name(sector_amount, replace)
+gr export "${ppg_descriptive_statistics}/sector_amount.png", replace
+
 * main products
 	* put into one table
 table clasificacion_objeto_des genderfo, statistic(frequency) ///
@@ -371,10 +440,135 @@ frame drop subtask?
 ***********************************************************************
 * 	PART 9: 	Plot independent variables: (5) contract allocation process
 ***********************************************************************
-* participation of female vs. male firms by contract allocation type
+* frequency of each type
+graph bar (sum) one, over(tipo_s, sort(1) lab(angle(45))) ///
+	blabel(bar, format(%-12.0fc)) ///
+	ytitle("total bids") ///
+	ylabel(, nogrid format(%-10.0fc)) ///
+	name(process_type_bids, replace)
+gr export "${ppg_descriptive_statistics}/process_type_bids.png", replace
+
+* procurement amount by type
+graph bar (sum) monto_usd, over(tipo_s, sort(1) lab(angle(45))) ///
+	blabel(bar, format(%-12.0fc)) ///
+	ytitle("total procurement value, USD") ///
+	ylabel(, nogrid format(%-15.0fc)) ///
+	name(process_type_amount, replace)
+gr export "${ppg_descriptive_statistics}/process_type_amount.png", replace
+
+
+* avg number of competitors by procurement allocation process type?
+graph bar (mean) n_competitors, over(tipo_s, sort(1) lab(angle(45))) ///
+	blabel(bar, format(%-12.0fc)) ///
+	ytitle("mean number of bidders") ///
+	ylabel(, nogrid format(%-10.0fc)) ///
+	name(process_type_competitors, replace)	
+gr export "${ppg_descriptive_statistics}/process_type_competitors.png", replace
+
+
+
+* participation of female vs. male firms by contract allocation type?
+graph bar (percent) one if genderfo == 1, over(tipo_s, lab(angle(45))) ///
+	blabel(bar, format(%-12.0fc)) ///
+	ytitle("percent of bids") ///
+	subtitle("female represented firms") ///
+	ylabel(, nogrid format(%-10.0fc)) ///
+	name(process_type_bids_female, replace)
+graph bar (percent) one if genderfo == 0, over(tipo_s, lab(angle(45))) ///
+	blabel(bar, format(%-12.0fc)) ///
+	ytitle("percent of bids") ///
+	subtitle("male represented firms") ///
+ 	ylabel(, nogrid format(%-10.0fc)) ///
+	name(process_type_bids_male, replace)
+gr combine process_type_bids_female process_type_bids_male, name(process_type_bids_gender, replace)
+gr export "${ppg_descriptive_statistics}/process_type_bids_gender.png", replace
+
+
+
 
 ***********************************************************************
-* 	PART 10: 	Plot independent variables: (2) gender firm representatives
+* 	PART 10: Table 1: bid-level
 ***********************************************************************
+/*
+Options to create table 1 in Stata (which honestly is still a pain!):
+	Option 1: tabstat, estout (credit to Asjad Naqvi & Ben Jann)
+		* advantage: easy & Latex/Overleaf compatible
+		* disadvantage: does not work for categorical variables, not possible to select
+			* statistics by variable
+		* link: https://medium.com/the-stata-guide/the-stata-to-latex-guide-6e7ed5622856
+	
+	Option 2: table1_mc
+		* disadvantage: no Latex .tex format
+
+	Option 3: table
+		* advantage: lots of customisation possible
+		* disadvantage: dimension concept complicated/customisation makes it also complex, only Stata 17
+ */
+	* put bid-level variables into locals by variable format
+local cont "total_points n_competitors precio_usd cantidad bid_won monto_usd monto_usd_w"
+local dum "genderpo"
+local categ "institucion_tipo tipo_s"
+ 
+* 1: upper part of table
+ 
+	* Option 1: tabstat, estout
+estpost tabstat `cont' `dum', c(stat) stat(sum mean sd min max n) by(genderfo) nototal
+
+esttab using "${ppg_descriptive_statistics}/table1.tex", replace, ///
+ cells("sum(fmt(%13.0fc)) mean(fmt(%13.2fc)) sd(fmt(%13.2fc)) min max count") nonumber ///
+  nomtitle nonote noobs label collabels("Sum" "Mean" "SD" "Min" "Max" "N") ///
+  eqlabels("Female" "Male") unstack
+  * consider for latex output adding "booktabs" & "compress" options
+
+
+	* 
+* 2: lower part of table 
+table (tipo_s) (institucion_tipo), statistic(frequency) statistic(percent) ///
+	sformat("%s%%" percent) ///
+	nototal
+
+	* word
+collect export "${ppg_descriptive_statistics}/table1_lowerpart.docx", replace
+	* latex
+collect export "${ppg_descriptive_statistics}/table1_lowerpart.tex", replace
+	
+	
+* Option 2
+/*
+table1_mc, by(genderfo) ///
+	vars( ///
+	total_points  contn %4.0fc ///
+	n_competitors contn %4.0fc ///
+	precio_usd 	  contn %12.0fc ///
+	cantidad 	  contn %8.0fc ///
+	bid_won 	  contn %4.0fc ///
+	monto_usd 	  contn %12.0fc ///
+	monto_usd_w   contn %12.0fc ///
+	) ///
+	nospace percent onecol missing total(before) */
+* Option 3
+/*
+table (total_points n_competitors) (), ///
+		statistic(frequency) ///
+		statistic(mean total_points n_competitors)
+		
+		
+		statistic(sd `cont' `dum') ///
+		style(table-1)
+		
+table (`cont' `dum' `categ') (genderfo), ///
+		statistic(mean `cont' `dum') ///
+		statistic(sd `cont' `dum') ///
+		statistic(frequency `categ') ///
+		statistic(percent `categ')   ///
+		style(table-1) 
+	* word
+collect export "${ppg_descriptive_statistics}/table1_bidlevel.docx", replace
+	* latex
+collect export "${ppg_descriptive_statistics}/table1_bidlevel.tex", replace
+		
+		*/
+		
+
 
 

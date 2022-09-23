@@ -162,7 +162,7 @@ if (0) do "${ppg_github}/ppg_collapse_firm.do"
 * 	PART 5: 	Run descriptive statistics do files		  	
 ***********************************************************************
 /* --------------------------------------------------------------------
-	PART 5.1.: firm level statistics & balance table
+	PART 5.1.: general descriptive statistics
 	Requires: sicop_process
 ----------------------------------------------------------------------*/		
 if (0) do "${ppg_github}/ppg_descriptive_statistics.do" 

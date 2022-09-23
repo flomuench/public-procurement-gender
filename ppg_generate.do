@@ -188,34 +188,40 @@ lab var n_competitors "number of other bidding firms"
 ***********************************************************************
 * 	PART 7:  gen variable with US dollar instead of Costa Rican Colones amount
 ***********************************************************************
+		* write a loop for both price and actual procurement value
+local amounts "monto precio"
+foreach var of local amounts {
 		* create empty variable that will hold US dollar amounts
-gen monto_usd = ., a(monto_crc)
-		* put all years into local
-local year `" "2010" "2011" "2012" "2013" "2014" "2015" "2016" "2017" "2018" "2019" "'
-		* put exchange rates for specific year into local
-local exchange_rate `" "525" "505" "502" "499" "538" "534" "544" "567" "576" "587"  "'
+	gen `var'_usd = ., a(`var'_crc)
+			* put all years into local
+	local year `" "2010" "2011" "2012" "2013" "2014" "2015" "2016" "2017" "2018" "2019" "'
+			* put exchange rates for specific year into local
+	local exchange_rate `" "525" "505" "502" "499" "538" "534" "544" "567" "576" "587"  "'
 
-		* loop over each year and replace US amount 
-local n : word count `year'
-forvalues i = 1/`n' {
-	local a : word `i' of `year'
-	local b : word `i' of `exchange_rate'
-	replace monto_usd = monto_crc/ `b' if year == `a'
-}
+			* loop over each year and replace US amount 
+	local n : word count `year'
+	forvalues i = 1/`n' {
+		local a : word `i' of `year'
+		local b : word `i' of `exchange_rate'
+		replace `var'_usd = `var'_crc/ `b' if year == `a'
+	}
 
-format monto_usd %-15.3fc
-
+	format `var'_usd %-15.3fc
+	lab var monto_usd "contract value, USD"
+	lab var precio_usd "bid price, USD"
+	
 ***********************************************************************
 * 	PART 8:  winsorized + log-transform amount values to account for outliers --> see also ppg_descriptive_statistics
 ***********************************************************************
-	* winsorize
-local currencies "usd crc"
-foreach cur of local currencies {
-	winsor2 monto_`cur', suffix(_w) cuts(1 99)
-	format %-15.3fc monto_`cur'_w
-	order monto_`cur'_w, a(monto_`cur')
-	lab var monto_`cur'_w "winsorized amount in `cur'"
+		* winsorize
+	local currencies "usd crc"
+	foreach cur of local currencies {
+		winsor2 `var'_`cur', suffix(_w) cuts(1 99)
+		format %-15.3fc `var'_`cur'_w
+		order `var'_`cur'_w, a(`var'_`cur')
+		lab var `var'_`cur'_w "winsorized amount in `cur'"
 
+	}
 }
 
 	* log-transform
@@ -225,6 +231,7 @@ foreach cur of local currencies {
 	format %-15.3fc monto_`cur'_wlog
 	lab var monto_`cur'_w "winsorized log of amount in `cur'"
 }
+
 
 ***********************************************************************
 * 	PART 9: gen dependent variable: dummy bid won  

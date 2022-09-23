@@ -123,6 +123,17 @@ reshape wide factor_evaluacion factor_evaluacion_cat calificacion, i(sub_process
 order factor_evaluacion1-factor_evaluacion_cat14, last
 sort numero_procedimiento partida linea -calificacion1
 
+
+***********************************************************************
+* 	PART 4: 	create total points variable	  			
+***********************************************************************	
+*order calificacion?, last
+*order calificacion10-calificacion14, a(calificacion9)
+local c "calificacion"
+egen total_points = rowtotal(`c'1 `c'2 `c'3 `c'4 `c'5 `c'6 `c'7 `c'8 `c'9 `c'10 `c'11 `c'12 `c'13 `c'14 ), missing /* missing --> if all MV, results in MV instead of zero*/
+order total_points, b(calificacion1)
+
+lab var total_points "bid evaluation, 0-100 points"
 	
 	
 ***********************************************************************
