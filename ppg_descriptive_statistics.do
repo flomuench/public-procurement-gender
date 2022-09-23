@@ -308,11 +308,65 @@ gr export "${ppg_descriptive_statistics}/gender_combis.png", replace
 * 	PART 8: 	Plot independent variables: (3) main products
 ***********************************************************************
 * main products
+	* put into one table
+table clasificacion_objeto_des genderfo, statistic(frequency) ///
+		statistic(percent, across(clasificacion_objeto_des)) ///
+		sformat("%s%%" percent)
+		
+	* one-way tabulation by gender
+table clasificacion_objeto_des if genderfo == 1, ///
+	statistic(frequency) statistic(percent)
+		
+		
+	* create a variable containing the absolute frequencies of each category
+bysort clasificacion_objeto_des : gen product_freq = _N, a(clasificacion_objeto_des)
+
+	* get an idea of absolute frequencies
+tab clasificacion_objeto_des
+tab clasificacion_objeto_des genderfo
+tab clasificacion_objeto_des if genderfo == 1, sort
+
+	* calculate a rank to select top products only
+bysort 
+
+	* visualise top 20 products
+		* female firms
+replace clasificacion_objeto_des = "productos de construccion" if clasificacion_objeto_des == "otros materiales y productos de uso en la construccion y mantenimiento"
+replace clasificacion_objeto_des = "productos electricos" if clasificacion_objeto_des == "materiales y productos electricos, telefonicos y de computo"
+replace clasificacion_objeto_des = "materiales medico" if clasificacion_objeto_des == "utiles y materiales medico, hospitalario y de investigacion"
+graph hbar (percent) one if product_freq >= 3931 & product_freq < . & genderfo == 1, ///
+	over(clasificacion_objeto_des, sort(1)) ///
+	ylabel(, nogrid) ///
+	ytitle("percent of bids of female-represented firms")
+	
+	
+		* male firms
+graph hbar (percent) one if product_freq >= 7700 & product_freq < . & genderfo == 0, ///
+	over(clasificacion_objeto_des, sort(1)) ///
+		ylabel(, nogrid) ///
+	ytitle("percent of bids of male-represented firms") ///
+	
+
+	* firmrep
+		* create a seperate frame
+frame copy default subtask1, replace
+frame change subtask1
+
+		* contract to select only 
+
+		* change frame
+frame change default
+frame copy default subtask2, replace
+frame change subtask2
 
 
-* main products for female vs. male procurement officers
+	* Procurement officers
 
-* main product for female vs. male firms
+
+
+	* drop frames
+frame drop subtask?
+
 
 ***********************************************************************
 * 	PART 9: 	Plot independent variables: (5) contract allocation process
