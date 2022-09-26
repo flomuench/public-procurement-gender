@@ -56,8 +56,8 @@ codebook cedula_proveedor if persona_encargada_proveedor == ""
 drop if persona_encargada_proveedor == ""
 		
 		* create i for reshape
-egen id_reshape = group(numero_procedimiento cedula_proveedor persona_encargada_proveedor genderfo date_publicacion)
-order id_reshape, b(numero_procedimiento)
+*egen id_reshape = group(numero_procedimiento cedula_proveedor persona_encargada_proveedor genderfo)
+*order id_reshape, b(numero_procedimiento)
 
 		* put variables to reshape into locals
 local factor_evaluacion "factor_evaluacion1 factor_evaluacion2 factor_evaluacion3 factor_evaluacion4 factor_evaluacion5 factor_evaluacion6 factor_evaluacion7 factor_evaluacion8 factor_evaluacion9 factor_evaluacion10 factor_evaluacion11 factor_evaluacion12 factor_evaluacion13 factor_evaluacion14"
@@ -68,7 +68,7 @@ local calificacion "calificacion1 calificacion2 calificacion3 calificacion4 cali
 
 local reshape_vars "monto_crc cantidad precio_crc clasificacion_objeto clasifi_hacienda clasificacion_objeto_des clasi_bien_serv sector `factor_evaluacion' `factor_evaluacion_cat'  `calificacion'"
 
-reshape wide `reshape_vars', i(id_reshape) j(sub_process)
+reshape wide `reshape_vars', i(numero_procedimiento cedula_proveedor persona_encargada_proveedor) j(sub_process)
 
 		* option: first linea, then partida
 *reshape wide vars, i(numero_procedimiento partida firm) j(linea)

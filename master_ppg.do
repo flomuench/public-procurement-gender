@@ -40,6 +40,7 @@ set varabbrev off /* avoid wrong variable gets selected */
 ssc install freqindex
 ssc install matchit
 ssc install winsor2, replace
+net install fastreshape, from("https://raw.githubusercontent.com/mdroste/stata-fastreshape/master/")
 	
 */
 
