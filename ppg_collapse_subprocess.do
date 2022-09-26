@@ -14,7 +14,7 @@
 *	Requires: 	  	sicop_final.dta									  
 *	Creates:  		sicop_final_subprocess.dta			                                  
 ***********************************************************************
-* 	PART START: 	Format string & numerical variables		  			
+* 	PART START: 	Load data set		
 ***********************************************************************
 use "${ppg_final}/sicop_final", clear
 

@@ -30,7 +30,7 @@ rename *, lower
 ***********************************************************************
 * 	PART 2: 	Drop variables		  			
 ***********************************************************************
-drop cartel_no secuencia codigo_clasificacion
+drop cartel_no secuencia codigo_clasificacion firstfomerge secondfomerge mergegpo
 
 ***********************************************************************
 * 	PART 3: 	Format string & numerical variables		  			
