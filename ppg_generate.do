@@ -26,13 +26,19 @@ use "${ppg_intermediate}/sicop_replicable", clear
 
 
 ***********************************************************************
-* 	PART 0:  create an id for each sub-process
+* 	PART 0:  create id's
 ***********************************************************************
+	* sub-processes
 egen sub_process_id = group(numero_procedimiento partida linea)
+
+	* sub-processes firm combinations
 egen sub_process_firm_id = group(numero_procedimiento partida linea cedula_proveedor)
 format sub_process_id sub_process_firm_id %-12.0fc
 
-order sub_process_id sub_process_firm_id, b(numero_procedimiento)
+	* firm id
+egen firm_id = group(cedula_proveedor)
+
+order sub_process_id firm_id sub_process_firm_id, b(numero_procedimiento)
 
 ***********************************************************************
 * 	PART 1: create Stata recognized date variables + generate age variables			

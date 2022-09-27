@@ -19,67 +19,6 @@
 use "${ppg_final}/sicop_subprocess", clear
 
 
-
-***********************************************************************
-* 	PART 1: 	reshape from sub_sub_process to sub_process level 			
-***********************************************************************
-* objective: transform process-partida-linea-firm to process-partida-firm from long to wide format
-
-		* sort data
-sort sub_process_firm_id
-	
-		* identify variables that vary on linea-level
-/*
-vary: cantidad, precio, monto*, clasificacion_objeto, factor_evaluacion, calificacion
-*/
-/* example:line 1-8
-*/
-order sub_process_firm_id sub_process_id numero_procedimiento partida linea nombre_proveedor cedula_proveedor monto_crc cantidad precio_crc clasificacion_objeto clasifi_hacienda clasificacion_objeto_des clasi_bien_serv
-format %-4.0g sub_process_firm_id sub_process_id partida linea
-
-		* try fixing linea and partida in one go
-foreach x of var partida linea {
-	gen `x'1 = string(`x'), a(`x')
-}
-gen sub_process = partida1 + linea1, a(linea1)
-drop partida1 linea1
-destring sub_process, replace
-		
-		* drop vars that are not constant & not needed
-drop sub_process_firm_id sub_process_id partida linea _freq firstfomerge secondfomerge mergegpo date_adjudicacion fecha_adjudicacion year_adjudicacion
-		/* attention: date_adjudicacion is missing for 11,047 bids
-		we use date_publication instead, which is never missing &
-		constant across subprocesses */
-
-		* 6 companies with a total of 424 bids have missing rep name --> drop
-codebook cedula_proveedor if persona_encargada_proveedor == ""
-drop if persona_encargada_proveedor == ""
-		
-		* create i for reshape
-*egen id_reshape = group(numero_procedimiento cedula_proveedor persona_encargada_proveedor genderfo)
-*order id_reshape, b(numero_procedimiento)
-
-		* put variables to reshape into locals
-local factor_evaluacion "factor_evaluacion1 factor_evaluacion2 factor_evaluacion3 factor_evaluacion4 factor_evaluacion5 factor_evaluacion6 factor_evaluacion7 factor_evaluacion8 factor_evaluacion9 factor_evaluacion10 factor_evaluacion11 factor_evaluacion12 factor_evaluacion13 factor_evaluacion14"
-
-local factor_evaluacion_cat "factor_evaluacion_cat1 factor_evaluacion_cat2 factor_evaluacion_cat3 factor_evaluacion_cat4 factor_evaluacion_cat5 factor_evaluacion_cat6 factor_evaluacion_cat7 factor_evaluacion_cat8 factor_evaluacion_cat9 factor_evaluacion_cat10 factor_evaluacion_cat11 factor_evaluacion_cat12 factor_evaluacion_cat13 factor_evaluacion_cat14"
-
-local calificacion "calificacion1 calificacion2 calificacion3 calificacion4 calificacion5 calificacion6 calificacion7 calificacion8 calificacion9 calificacion10 calificacion11 calificacion12 calificacion13 calificacion14"
-
-local reshape_vars "monto_crc cantidad precio_crc clasificacion_objeto clasifi_hacienda clasificacion_objeto_des clasi_bien_serv sector `factor_evaluacion' `factor_evaluacion_cat'  `calificacion'"
-
-reshape wide `reshape_vars', i(numero_procedimiento cedula_proveedor persona_encargada_proveedor) j(sub_process)
-
-		* option: first linea, then partida
-*reshape wide vars, i(numero_procedimiento partida firm) j(linea)
-
-log using "${ppg_final}/reshape_error", text replace
-reshape error
-log close
-
-* remain not constant: fecha_adjudicacion (4408), date_adjudicacion (3590), year_adjudicacion (855); count for date_adjudicacion remains constant even after having dropped other two & re-running on different computer
-
-/*
 ***********************************************************************
 * 	PART 1: 	save all the variables labels 	  			
 ***********************************************************************
