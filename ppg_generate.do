@@ -37,6 +37,7 @@ format sub_process_id sub_process_firm_id %-12.0fc
 
 	* firm id
 egen firm_id = group(cedula_proveedor)
+order firm_id, a(cedula_proveedor)
 
 order sub_process_id firm_id sub_process_firm_id, b(numero_procedimiento)
 
