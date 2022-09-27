@@ -193,7 +193,7 @@ lab var n_competitors "number of other bidding firms"
 
 
 ***********************************************************************
-* 	PART 7:  gen variable with US dollar instead of Costa Rican Colones amount
+* 	PART 8:  gen variable with US dollar instead of Costa Rican Colones amount
 ***********************************************************************
 		* write a loop for both price and actual procurement value
 local amounts "monto precio"
@@ -214,11 +214,9 @@ foreach var of local amounts {
 	}
 
 	format `var'_usd %-15.3fc
-	lab var monto_usd "contract value, USD"
-	lab var precio_usd "bid price, USD"
 	
 ***********************************************************************
-* 	PART 8:  winsorized + log-transform amount values to account for outliers --> see also ppg_descriptive_statistics
+* 	PART 9:  winsorized + log-transform amount values to account for outliers --> see also ppg_descriptive_statistics
 ***********************************************************************
 		* winsorize
 	local currencies "usd crc"
@@ -231,6 +229,9 @@ foreach var of local amounts {
 	}
 }
 
+	lab var monto_usd "contract value, USD"
+	lab var precio_usd "bid price, USD"
+
 	* log-transform
 local currencies "usd crc"
 foreach cur of local currencies {
@@ -241,14 +242,14 @@ foreach cur of local currencies {
 
 
 ***********************************************************************
-* 	PART 9: gen dependent variable: dummy bid won  
+* 	PART 10: gen dependent variable: dummy bid won  
 ***********************************************************************
 gen bid_won = 0, a(monto_crc)
 replace bid_won = 1 if monto_crc != .
 lab var bid_won "firm won bid"
 
 ***********************************************************************
-* 	PART 10: gen dummy for bid-level procurement officer-firm representative gender combinations
+* 	PART 11: gen dummy for bid-level procurement officer-firm representative gender combinations
 ***********************************************************************
 gen gender_combi = . 
 	replace gender_combi = 1 if genderpo == 1 & genderfo == 1

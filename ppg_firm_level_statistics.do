@@ -18,9 +18,16 @@
 ***********************************************************************
 use "${ppg_intermediate}/sicop_firm", clear
 	
+sort genderfo0
 ***********************************************************************
-* 	PART 1: 	create win/participated ratio	  			
+* 	PART 1: 	create variables for visualisation 			
 ***********************************************************************	
+	* create dummy for firms with all gender reps
+gen all_gender = 0
+replace all_gender = 1 if genderfo0 != .
+* 561 companies that have both female and male reps
+	
+	* create win/participated ratio	 
 gen success_ratio = times_won/times_part
 lab var success_ratio "times bid won in times participated" 
 	

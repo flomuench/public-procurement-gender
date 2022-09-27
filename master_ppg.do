@@ -143,40 +143,33 @@ if (1) do "${ppg_github}/ppg_generate.do"
 /* --------------------------------------------------------------------
 	PART 5.1: Collapse - remove criteria level
 	Requires: sicop_final
-	Creates:  sicop_final_subprocess
+	Creates:  sicop_subprocess
 ----------------------------------------------------------------------*/		
 if (1) do "${ppg_github}/ppg_collapse_subprocess.do"
 /* --------------------------------------------------------------------
 	PART 5.2: Collapse - remove sub-processes and linea
-	Requires: sicop_final_subprocess
-	Creates:  sicop_final_process
+	Requires: sicop_subprocess
+	Creates:  sicop_process
 ----------------------------------------------------------------------*/		
-if (0) do "${ppg_github}/ppg_collapse_process.do"
+if (1) do "${ppg_github}/ppg_collapse_process.do"
 /* --------------------------------------------------------------------
-	PART 5.2: Collapse - remove sub-processes and linea
+	PART 5.3: Create firm-level data set for descriptive statistics
 	Requires: sicop_final_subprocess
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/		
-if (0) do "${ppg_github}/ppg_collapse_firm.do"
+if (0) do "${ppg_github}/ppg_collapse_firm_level.do"
 
 ***********************************************************************
 * 	PART 5: 	Run descriptive statistics do files		  	
 ***********************************************************************
 /* --------------------------------------------------------------------
-	PART 5.1.: general descriptive statistics
-	Requires: sicop_process
+	PART 5.1.: general, bid-level descriptive statistics
+	Requires: sicop_subprocess
 ----------------------------------------------------------------------*/		
 if (0) do "${ppg_github}/ppg_descriptive_statistics.do" 
 /* --------------------------------------------------------------------
 	PART 5.2.: firm level statistics & balance table
-	Requires: sicop_final
-	Creates:  sicop_firm
-----------------------------------------------------------------------*/		
-if (0) do "${ppg_github}/ppg_collapse_firm_level.do" 
-/* --------------------------------------------------------------------
-	PART 5.3.: firm level statistics & balance table
 	Requires: sicop_firm
-	Creates:  sicop_firm
 ----------------------------------------------------------------------*/
 if (0) do "${ppg_github}/ppg_firm_level_statistics.do"
 
