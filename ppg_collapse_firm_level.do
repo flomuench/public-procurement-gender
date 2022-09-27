@@ -127,6 +127,7 @@ local meanvars "avg_price=precio_usd avg_quantity=cantidad avg_points=total_poin
 collapse (firstnm) `keepvars' (sum) `sumvars' (mean) `meanvars', by(fgid)
 sort nombre_proveedor persona_encargada_proveedor genderfo
 
+drop fgid
 ***********************************************************************
 * 	PART 3: 	label the variables in the new firm level data set	  			
 ***********************************************************************	
@@ -158,6 +159,7 @@ label var avg_comp "mean competitors in bid"
 ***********************************************************************
 * 	PART 4: reshape to one line per firm (due to firms with severals reps)
 ***********************************************************************
+/*
 	* get an idea how many firms have several reps
 duplicates list cedula_proveedor
 duplicates report 
@@ -181,6 +183,7 @@ br if several_reps > 0
 	* verify one single obs per firm
 isid cedula_proveedor
 	
+*/
 	
 ***********************************************************************
 * 	PART END: 	Save firm level data set		  			
