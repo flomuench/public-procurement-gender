@@ -49,6 +49,9 @@ by cedula_proveedor: gen hours_dif = hours(date_publicacion - date_publicacion[_
 gen days_dif = hours_dif/24, a(date_publicacion_dif)
 drop hours_dif
 
+	* how much time between publication and adjucation?
+gen days_pub_adj = clockdiff(date_publicacion, date_adjudicacion, "day"), a(date_adjudicacion)
+
 
 ***********************************************************************
 * 	PART 1:  identify the different treatment groups 			

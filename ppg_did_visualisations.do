@@ -21,11 +21,40 @@
 use "${ppg_intermediate}/sicop_did", clear
 
 
-sum days_dif, d
-
 
 ***********************************************************************
-* 	PART 2:  visualise how many lags and leaps before treatment (change in reps gender)
+* 	PART 1: Days between contract publication of subsequent bids
+***********************************************************************
+sum days_dif, d
+/*
+recall: these are actually the publication dates; we do not know when the firms applied
+75% of days_dif is only 18 days
+90% of days_dif is <= 66 ~ 2 months
+*/
+display 0.001517 * 1440 /* one day = 24 h, 24 * 60 minutes = 1440 minutes */
+* min. or in other words quickest re-application: 2 minutes later
+display 0.001517 * 1440
+
+histogram days_dif, width(1)
+
+histogram days_dif if days_dif < 437, width(1)
+histogram days_dif if days_dif < 100, width(1) yline(30)
+
+***********************************************************************
+* 	PART 2: Days contract publication and contract allocation
+***********************************************************************
+sum days_pub_adj, d
+/* 
+mean = 30, median = 20 --> implying that on average a firm know whether bid is
+successful exactly around the time it bids for the next contract
+
+min or quickest contract allocation happens in one days or even less, quickest 25% in two weeks,
+75% within one month
+
+*/
+
+***********************************************************************
+* 	PART 3:  visualise how many lags and leaps before treatment (change in reps gender)
 ***********************************************************************
 cd "$ppg_figures"
 	
