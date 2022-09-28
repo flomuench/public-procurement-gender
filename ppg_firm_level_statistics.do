@@ -178,7 +178,7 @@ lab var firm_location7 "Limón"
 lab def genders 1 "female" 0 "male"
 lab val genderfo genders
 
-	* 1: firms with single gender
+	* 1: Consider only female or male; firms with mixed reps are counted in each category
 local balvars "times_part times_won success_ratio total_amount avg_points avg_comp age_registro age_constitucion firm_international firm_size? firm_location?"
 		* Excel
 iebaltab `balvars', grpvar(genderfo) replace ///
@@ -189,6 +189,29 @@ iebaltab `balvars', grpvar(genderfo) replace ///
 		* Tex
 iebaltab `balvars', grpvar(genderfo) replace ///
 		savetex("${ppg_descriptive_statistics}/baltab_firm_gender") ///
+		vce(robust) pttest rowvarlabels balmiss(mean) onerow stdev notecombine ///
+		format(%12.2fc)
+		
+	* 2: distinguish four categories: male only, female only, mixed either male or female
+gen gender4 = .
+	replace gender4 = 1 if gender == 0
+	replace gender4 = 2 if gender == 1
+	replace gender4 = 3 if gender == 2 & genderfo == 0 /* mixed, under male rep */
+	replace gender4 = 4 if gender == 2 & genderfo == 1 /* mixed, under female rep */
+lab def gender_four 1 "male only" 2 "femaly only" 3 "mixed, under male" 4 "mixed, under female"
+lab val gender4 gender_four
+
+local balvars "times_part times_won success_ratio total_amount avg_points avg_comp age_registro age_constitucion firm_international firm_size? firm_location?"
+
+		* Excel
+iebaltab `balvars', grpvar(gender4) replace ///
+		save("${ppg_descriptive_statistics}/baltab_firm_gender4") ///
+		vce(robust) pttest rowvarlabels balmiss(mean) onerow stdev notecombine ///
+		format(%12.2fc)
+			 
+		* Tex
+iebaltab `balvars', grpvar(gender4) replace ///
+		savetex("${ppg_descriptive_statistics}/baltab_firm_gender4") ///
 		vce(robust) pttest rowvarlabels balmiss(mean) onerow stdev notecombine ///
 		format(%12.2fc)
 			 

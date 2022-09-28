@@ -134,6 +134,7 @@ if (1) do "${ppg_github}/ppg_correct.do"
 	PART 3.3: generate
 	Requires: sicop_replicable
 	Creates:  sicop_final
+	Erases: sicop_replicable
 ----------------------------------------------------------------------*/		
 if (1) do "${ppg_github}/ppg_generate.do"
 
@@ -174,33 +175,37 @@ if (1) do "${ppg_github}/ppg_descriptive_statistics.do"
 if (1) do "${ppg_github}/ppg_firm_level_statistics.do"
 
 ***********************************************************************
-* 	PART 6: 	Regression analysis		  	
+* 	PART 6: 	Multivariate Regression analysis		  	
 ***********************************************************************
 /* --------------------------------------------------------------------
 	PART 5.1.: multivariate regression analysis
 	Requires: sicop_replicable
 ----------------------------------------------------------------------*/
 if (0) do "${ppg_github}/ppg_multivariate_regression.do"
+
+***********************************************************************
+* 	PART 7: Event study difference-in-difference (EDID)		  	
+***********************************************************************
 /* --------------------------------------------------------------------
-	PART 5.2.: event study with difference-in-difference approach
-	Requires: sicop_replicable
-	Creates:  sicop_firm
+	PART 7.1.: generate EDID variables & identify "treatment" groups
+	Requires: sicop_process
+	Creates: sicop_process
 ----------------------------------------------------------------------*/
-	* correct, collapse data set
-if (0) do "${ppg_github}/ppg_did_collapse.do"
-
-	* generate variables/identify treatment groups
 if (1) do "${ppg_github}/ppg_did_generate.do"
-
-	* regression analysis
+/* --------------------------------------------------------------------
+	PART 7.2.: visualize behaviour around the event window (change in reps)
+	Requires: sicop_process
+----------------------------------------------------------------------*/
+if (0) do "${ppg_github}/ppg_did_visualisations.do"
+/* --------------------------------------------------------------------
+	PART 7.3.: run EDID regressions
+	Requires: sicop_process
+----------------------------------------------------------------------*/
 if (0) do "${ppg_github}/ppg_did_regresssions.do"
 
-	* visualisations
-if (0) do "${ppg_github}/ppg_did_visualisations.do"
-
 
 /* --------------------------------------------------------------------
-	PART 5.3.: Panel one and two way fixed effects approach
+	PART 8: Panel one and two way fixed effects approach
 	Requires: sicop_replicable
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/

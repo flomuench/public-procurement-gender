@@ -21,8 +21,11 @@
 use "${ppg_intermediate}/sicop_did", clear
 
 
+sum days_dif, d
+
+
 ***********************************************************************
-* 	PART 1:  visualise how many lags and leaps before treatment (change in reps gender)
+* 	PART 2:  visualise how many lags and leaps before treatment (change in reps gender)
 ***********************************************************************
 cd "$ppg_figures"
 	
@@ -49,7 +52,7 @@ twoway  (histogram nttt10 if nttt10 <= 20 & nttt10 > = 0 & m2f == 1, width(1) fr
 *graph export lags_leaps_around_gender_change_process_level_m2f_10.png, replace
 
 ***********************************************************************
-* 	PART 2:  balance table 
+* 	PART 3:  balance table 
 ***********************************************************************
 	* process level balance table (uncorrected for frequency of firm particiation)
 local balvar "firm_age_ca firm_age_2019 firm_capital firm_international firm_location1 firm_location2 firm_location3 firm_location4 firm_location5 firm_location6 firm_location7 firm_size1 firm_size2 firm_size3 firm_size4 firm_size5 monto_crc" 
@@ -60,7 +63,7 @@ iebaltab `balvar', grpvar(m2f) save(baltab_m2f) replace ///
 	* firm level balance table (after collapsing to have just one line per firm)
 			 
 ***********************************************************************
-* 	PART 3:  Amount won (by gender) 
+* 	PART 4:  Amount won (by gender) 
 ***********************************************************************
 histogram monto_crc if monto_crc < 10000000 & monto_crc > 0
 

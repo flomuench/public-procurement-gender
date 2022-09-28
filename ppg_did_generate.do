@@ -17,30 +17,43 @@
 *	10) 			Create a time to treat variable for treatment group	
 * 																				  
 *	Author:  	Florian Muench					          															      
-*	ID variable: 	process level id = firm_occurence ; firm level id = firmid
-*	Requires:  	   	sicop_did.dta							  
-*	Creates:  		sicop_did.dta	   						  
+*	ID variable: 	firm id = cedula_proveedor; process id = numero_procedimiento
+*	Requires:  	   	sicop_process.dta							  
+*	Creates:  		sicop_process.dta	   						  
 *																	  
 ***********************************************************************
 * 	PART START:  Load data set		  			
 ***********************************************************************
-	* load the data
 use "${ppg_final}/sicop_process", clear
 
-	* drop the treatment groups variables defined on bid-level
-drop reps single_change never_change multiple_change
 
 ***********************************************************************
 * 	PART 0:  create firm occurence running variable
 ***********************************************************************	
-sort firmid date_adjudicacion numero_procedimiento partida linea
-by firmid: gen firm_occurence = _n, a(firmid)
-format %5.0g firmid firm_occurence
+	* change order to panel structure: firm id first variable
+order cedula_proveedor nombre_proveedor persona_encargada_proveedor numero_procedimiento date_publicacion date_adjudicacion monto_crc
+	
+	* stable sort such that remains always in same order
+sort cedula_proveedor date_publicacion numero_procedimiento, stable
+
+	* create firm occurence count
+by cedula_proveedor: gen firm_occurence = _n, a(cedula_proveedor)
+format %-5.0g firm_occurence
+
+
+	* create time difference between two contracts
+			* calculation/difference btw. two dates are calculates in miliseconds
+				* adding hours function provides diffence in hours rather than miliseconds
+				* dividing by 24 provides the difference in days
+by cedula_proveedor: gen hours_dif = hours(date_publicacion - date_publicacion[_n-1]), a(date_publicacion)
+gen days_dif = hours_dif/24, a(date_publicacion_dif)
+drop hours_dif
+
 
 ***********************************************************************
 * 	PART 1:  identify the different treatment groups 			
 ***********************************************************************	
-	********* PART 1.1.: try to identify firms that changed the representative
+	********* PART 1.1.: identify firms that changed the representative
 		* in analysis drop all firms that have not changed their representative
 		* as change in rep could indicate firm performs less well before, hence
 		* effect observed after rep change would reflect change from low to high performing
@@ -49,7 +62,7 @@ format %5.0g firmid firm_occurence
 ***********************************************************************
 * 	PART 2: dummy for change in representative 	"repchange"		
 ***********************************************************************
-gen repchange1 = . 
+gen repchange1 = ., a(persona_encagarda_proveedor)
 bysort firmid: replace repchange = 1 if persona_encargada_proveedor[_n] != persona_encargada_proveedor[_n-1]
 bysort firmid: replace repchange = 0 if persona_encargada_proveedor[_n] == persona_encargada_proveedor[_n-1]
 
