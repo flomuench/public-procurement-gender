@@ -215,6 +215,10 @@ gr export "${ppg_descriptive_statistics}/bid_won_pdistribution.png", replace
 ***********************************************************************
 * 	PART 5: 	Plot independent variables: (1) gender procurement officer
 ***********************************************************************
+* do PO change within a process?
+sort numero_procedimiento partida linea
+by
+
 * bids decided for by women vs. men
 graph bar (percent) monto_usd one, over(genderpo, lab(labs(medium))) asyvars stack ///
 	blabel(bar, format(%10.2fc) position(center)) ///

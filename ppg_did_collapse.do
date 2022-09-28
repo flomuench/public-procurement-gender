@@ -58,15 +58,20 @@ firmid 1 = 742 wins linea 1 and linea 2
 */
 	
 			
-	* identify & remove same-process-firmid-winner combinations
+	* identify & remove same-process-firmid-winner combinations Why remove loosers? 
+		* Because want only one obs per firm. This works for probability of winning,
+		* but if one also considers amount won and points received, it potentially hides
+		* the 2nd, 3rd, nth bid and the amounts and points won in this bid. Collapse,
+		* instead, sums amounts and points over each process. It is also cleaner in so far
+		* as it has only one PO-FR pair
 sort numero_procedimiento firmid winner
 quietly by numero_procedimiento firmid winner:  gen dup = cond(_N==1,0,_n)
 order dup, b(post)
 drop if dup > 1 & dup < .
 	* 580,878 of 774, 391 obs dropped...
-	* 193,507 obs remain
+	* 193,507 obs remain  (note: collapsing resulted in 179,751 lines instead)
 codebook numero_procedimiento
-	* 43 692 single processes
+	* 43 692 single processes (note: same number for collapsing, hence difference comes from sub-process/bid-level)
 	
 ***********************************************************************
 * 	PART 2:  	create firm level number of occurence variable	  			

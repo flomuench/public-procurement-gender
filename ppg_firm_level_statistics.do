@@ -2,8 +2,7 @@
 * 			public procurement gender firm level statistics									  		  
 ***********************************************************************
 *																	  
-*	PURPOSE: analyze the effect of gender on success in public procure					  	  			
-*			ment
+*	PURPOSE: create firm-level descriptive statistics & balance table
 *																	  
 *	OUTLINE:														  
 *	1)   	generate balance table between female and male firms					  
@@ -11,12 +10,12 @@
 *																	  													      
 *	Author:  	Florian Muench						    
 *	ID variable: 				  					  
-*	Requires: 	  	SICOP_gender_new_workingversion.dta									  
-*	Creates:  ml_inter.dta			                                  
+*	Requires: sicop_firm
+*	Creates:  -			                                  
 ***********************************************************************
-* 	PART START: 	Format string & numerical variables		  			
+* 	PART START: 	load data set
 ***********************************************************************
-use "${ppg_intermediate}/sicop_firm", clear
+use "${ppg_final}/sicop_firm", clear
 	
 *sort genderfo0
 ***********************************************************************
@@ -54,9 +53,8 @@ twoway ///
 	(kdensity times_part if genderfo == 1) ///
 	(kdensity times_part if genderfo == 0)
 	
-foreach x of varl times_part times_won {
+foreach x of var times_part times_won total_amount {
 	gen `x'_log = log(`x')
-	gen `x'_log  = log(`x')
 }
 
 	* times participated
@@ -74,55 +72,126 @@ gr export "${ppg_descriptive_statistics}/firm_part_gender.png", replace
 	
 	* times won
 twoway ///
-	(kdensity times_part_log0) ///
-	(kdensity times_part_log1), ///
-	legend(order(1 "female firm" 2 "male firm") row(1) pos(6) size(medium)) ///
+	(kdensity times_won_log if genderfo == 1 & gender == 1, lw(0.6) lc(black) lp(1))  ///
+	(kdensity times_won_log if genderfo == 0 & gender == 0, lw(0.6) lc(gs10) lp(1))  ///
+	(kdensity times_won_log if genderfo == 1 & gender == 2, lw(0.3) lc(black) lp(-))  ///
+	(kdensity times_won_log if genderfo == 0 & gender == 2, lw(0.3) lc(gs10) lp(-)), ///
+	legend(order(1 "female firm" 2 "male firm" 3 "mixed, female rep." 4 "mixed, male rep.") row(2) pos(6) size(medium)) ///
 	xtitle("times firm won, log-transformed", size(medium)) ///
 	ytitle("density", size(medium)) ///
 	ylabel(, nogrid) xlabel(, nogrid) ///
 	name(firm_won_gender, replace)
-	
+gr export "${ppg_descriptive_statistics}/firm_won_gender.png", replace
+
+
+	* amout won
+twoway ///
+	(kdensity total_amount_log if genderfo == 1 & gender == 1, lw(0.6) lc(black) lp(1))  ///
+	(kdensity total_amount_log if genderfo == 0 & gender == 0, lw(0.6) lc(gs10) lp(1))  ///
+	(kdensity total_amount_log if genderfo == 1 & gender == 2, lw(0.3) lc(black) lp(-))  ///
+	(kdensity total_amount_log if genderfo == 0 & gender == 2, lw(0.3) lc(gs10) lp(-)), ///
+	legend(order(1 "female firm" 2 "male firm" 3 "mixed, female rep." 4 "mixed, male rep.") row(2) pos(6) size(medium)) ///
+	xtitle("total amount won, log-transformed, USD", size(medium)) ///
+	ytitle("density", size(medium)) ///
+	ylabel(, nogrid) xlabel(, nogrid) ///
+	name(firm_amount_gender, replace)
+gr export "${ppg_descriptive_statistics}/firm_amount_gender.png", replace
+
 	
 	* efficiency
 twoway ///
-	(kdensity success_ratio if genderfo == 1) ///
-	(kdensity success_ratio if genderfo == 0), ///
-	legend(order(1 "male firm" 2 "female firm") row(1) pos(6) size(medium)) ///
-	xtitle("times won/times participated", size(medium)) ///
+	(kdensity success_ratio if genderfo == 1 & gender == 1, lw(0.6) lc(black) lp(1))  ///
+	(kdensity success_ratio if genderfo == 0 & gender == 0, lw(0.6) lc(gs10) lp(1))  ///
+	(kdensity success_ratio if genderfo == 1 & gender == 2, lw(0.3) lc(black) lp(-))  ///
+	(kdensity success_ratio if genderfo == 0 & gender == 2, lw(0.3) lc(gs10) lp(-)), ///
+	legend(order(1 "female firm" 2 "male firm" 3 "mixed, female rep." 4 "mixed, male rep.") row(2) pos(6) size(medium)) ///
+	xtitle("times won / times participated", size(medium)) ///
 	ytitle("density", size(medium)) ///
 	ylabel(, nogrid) xlabel(, nogrid) ///
-	name(firm_efficiency_gender, replace)
+	name(firm_successratio_gender, replace)
+gr export "${ppg_descriptive_statistics}/firm_successratio_gender.png", replace
+
+	* efficiency but restricted > 1 participation
+twoway ///
+	(kdensity success_ratio if genderfo == 1 & gender == 1 & times_part > 1, lw(0.6) lc(black) lp(1))  ///
+	(kdensity success_ratio if genderfo == 0 & gender == 0 & times_part > 1, lw(0.6) lc(gs10) lp(1))  ///
+	(kdensity success_ratio if genderfo == 1 & gender == 2 & times_part > 1, lw(0.3) lc(black) lp(-))  ///
+	(kdensity success_ratio if genderfo == 0 & gender == 2 & times_part > 1, lw(0.3) lc(gs10) lp(-)), ///
+	legend(order(1 "female firm" 2 "male firm" 3 "mixed, female rep." 4 "mixed, male rep.") row(2) pos(6) size(medium)) ///
+	xtitle("times won / times participated", size(medium)) ///
+	ytitle("density", size(medium)) ///
+	ylabel(, nogrid) xlabel(, nogrid) ///
+	name(firm_successratio_gender, replace)
+gr export "${ppg_descriptive_statistics}/firm_successratio_gender2.png", replace
 	
 ***********************************************************************
 * 	PART 3: DV: points won
 ***********************************************************************
+	* points
+twoway ///
+	(kdensity avg_points if genderfo == 1 & gender == 1, lw(0.6) lc(black) lp(1))  ///
+	(kdensity avg_points if genderfo == 0 & gender == 0, lw(0.6) lc(gs10) lp(1))  ///
+	(kdensity avg_points if genderfo == 1 & gender == 2, lw(0.3) lc(black) lp(-))  ///
+	(kdensity avg_points if genderfo == 0 & gender == 2, lw(0.3) lc(gs10) lp(-)), ///
+	legend(order(1 "female firm" 2 "male firm" 3 "mixed, female rep." 4 "mixed, male rep.") row(2) pos(6) size(medium)) ///
+	xtitle("average bid evaluation, 0-100 points", size(medium)) ///
+	ytitle("density", size(medium)) ///
+	ylabel(, nogrid) xlabel(, nogrid) ///
+	name(firm_points_gender, replace)
+gr export "${ppg_descriptive_statistics}/firm_points_gender1.png", replace
+
+	* points but restricted to firms with > 2 participations 
+		* concern: 100 avg points per bid easier to reach if just one bid
+twoway ///
+	(kdensity avg_points if genderfo == 1 & gender == 1 & times_part > 2, lw(0.6) lc(black) lp(1))  ///
+	(kdensity avg_points if genderfo == 0 & gender == 0 & times_part > 2, lw(0.6) lc(gs10) lp(1))  ///
+	(kdensity avg_points if genderfo == 1 & gender == 2 & times_part > 2, lw(0.3) lc(black) lp(-))  ///
+	(kdensity avg_points if genderfo == 0 & gender == 2 & times_part > 2, lw(0.3) lc(gs10) lp(-)), ///
+	legend(order(1 "female firm" 2 "male firm" 3 "mixed, female rep." 4 "mixed, male rep.") row(2) pos(6) size(medium)) ///
+	xtitle("average bid evaluation, 0-100 points", size(medium)) ///
+	ytitle("density", size(medium)) ///
+	ylabel(, nogrid) xlabel(, nogrid) ///
+	name(firm_points_gender, replace)
+gr export "${ppg_descriptive_statistics}/firm_points_gender2.png", replace
+
+	
 	
 ***********************************************************************
 * 	PART 3: 	balance table female vs. male	  			
 ***********************************************************************
+tab firm_size, gen(firm_size)
+lab var firm_size1 "medium firm"
+lab var firm_size2 "large firm"
+lab var firm_size3 "size unclassified"
+lab var firm_size4 "micro firm"
+lab var firm_size5 "small firm"
+
+tab firm_location, gen(firm_location)
+lab var firm_location1 "San José"
+lab var firm_location2 "Alajuela"
+lab var firm_location3 "Cartago"
+lab var firm_location4 "Heredia"
+lab var firm_location5 "Guanac."
+lab var firm_location6 "Punta."
+lab var firm_location7 "Limón"
+
+lab def genders 1 "female" 0 "male"
+lab val genderfo genders
+
 	* 1: firms with single gender
-local balvars ""
-iebaltab `balvars' if all_gender == 0, grpvar() save(baltab_female_male) replace ///
-			 vce(robust) pttest rowvarlabels balmiss(mean) onerow stdev notecombine ///
-			 format(%12.2fc)
+local balvars "times_part times_won success_ratio total_amount avg_points avg_comp age_registro age_constitucion firm_international firm_size? firm_location?"
+		* Excel
+iebaltab `balvars', grpvar(genderfo) replace ///
+		save("${ppg_descriptive_statistics}/baltab_firm_gender") ///
+		vce(robust) pttest rowvarlabels balmiss(mean) onerow stdev notecombine ///
+		format(%12.2fc)
 			 
-kdensity success_ratio if female_firm == 1, ///
-	addplot(kdensity success_ratio if female_firm == 0)
-	
-tw ///
-	(kdensity success_ratio if female_firm == 1, lp(dash) lc(maroon)) ///
-	(kdensity success_ratio if female_firm == 0, lp(dash) lc(navy)) ///
-	, ///
-	legend(order(0 "{bf: Gender firm representative:}" ///
-	1 "Female (N=2435)" ///
-                     2 "Male firms (N=6465)") ///
-               c(1) pos(11) ring(0)) ///
-	xtitle("Success_ratio") ///
-	ytitle("Density") ///
-	title("Density distribution of sucess ratios in winning a public contract") ///
-	subtitle("Female vs. Male represented firms in Costa Rica") ///
-	graphregion(color(white)) ylab(,angle(0) nogrid notick) xscale(noline) yscale(noline) yline(0 , lc(black))
-graph export success_ratio_distribution.png, replace
+		* Tex
+iebaltab `balvars', grpvar(genderfo) replace ///
+		savetex("${ppg_descriptive_statistics}/baltab_firm_gender") ///
+		vce(robust) pttest rowvarlabels balmiss(mean) onerow stdev notecombine ///
+		format(%12.2fc)
+			 
 ***********************************************************************
 * 	PART 3: 	sectoral distribution of firms	  			
 ***********************************************************************
@@ -131,7 +200,7 @@ graph export success_ratio_distribution.png, replace
 ***********************************************************************
 * 	PART 4: 	geographical distribution of firms  			
 ***********************************************************************
-
+graph bar firm_location?, over(genderfo)
 
 ***********************************************************************
 * 	PART 5: 	contract type  			

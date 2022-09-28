@@ -157,7 +157,7 @@ if (1) do "${ppg_github}/ppg_collapse_process.do"
 	Requires: sicop_final_subprocess
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/		
-if (0) do "${ppg_github}/ppg_collapse_firm_level.do"
+if (1) do "${ppg_github}/ppg_collapse_firm_level.do"
 
 ***********************************************************************
 * 	PART 5: 	Run descriptive statistics do files		  	
@@ -166,12 +166,12 @@ if (0) do "${ppg_github}/ppg_collapse_firm_level.do"
 	PART 5.1.: general, bid-level descriptive statistics
 	Requires: sicop_subprocess
 ----------------------------------------------------------------------*/		
-if (0) do "${ppg_github}/ppg_descriptive_statistics.do" 
+if (1) do "${ppg_github}/ppg_descriptive_statistics.do" 
 /* --------------------------------------------------------------------
 	PART 5.2.: firm level statistics & balance table
 	Requires: sicop_firm
 ----------------------------------------------------------------------*/
-if (0) do "${ppg_github}/ppg_firm_level_statistics.do"
+if (1) do "${ppg_github}/ppg_firm_level_statistics.do"
 
 ***********************************************************************
 * 	PART 6: 	Regression analysis		  	
@@ -187,7 +187,7 @@ if (0) do "${ppg_github}/ppg_multivariate_regression.do"
 	Creates:  sicop_firm
 ----------------------------------------------------------------------*/
 	* correct, collapse data set
-if (1) do "${ppg_github}/ppg_did_collapse.do"
+if (0) do "${ppg_github}/ppg_did_collapse.do"
 
 	* generate variables/identify treatment groups
 if (1) do "${ppg_github}/ppg_did_generate.do"

@@ -75,7 +75,7 @@ foreach var of local loopvars {
 
 
 ***********************************************************************
-* 	PART 3: reshape from sub_sub_process to sub_process level 			
+* 	PART 3: collapse data from sub_sub_process to process level 			
 ***********************************************************************
 /* 
 useful link: https://twitter.com/toddrjones/status/1566095691885301762

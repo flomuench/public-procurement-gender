@@ -25,10 +25,17 @@
 * 	PART START:  Load data set		  			
 ***********************************************************************
 	* load the data
-use "${ppg_intermediate}/sicop_did", clear
+use "${ppg_final}/sicop_process", clear
 
 	* drop the treatment groups variables defined on bid-level
 drop reps single_change never_change multiple_change
+
+***********************************************************************
+* 	PART 0:  create firm occurence running variable
+***********************************************************************	
+sort firmid date_adjudicacion numero_procedimiento partida linea
+by firmid: gen firm_occurence = _n, a(firmid)
+format %5.0g firmid firm_occurence
 
 ***********************************************************************
 * 	PART 1:  identify the different treatment groups 			
@@ -285,7 +292,7 @@ label values post* ab
 ***********************************************************************
 drop `value_before' `treat_value_before1' `control_value_before1' `control_value_before2' `treat_value_before2' `gender_change_count' `fonly' `monly'
 
-save "sicop_did", replace	
+*save "${ppg_final}/sicop_process", replace
 
 
 
@@ -299,7 +306,4 @@ save "sicop_did", replace
 * 	PART 3:  Create a placebo treatment for the firms that did never change CEO			
 ***********************************************************************
 * idea: see _difference-in-difference line 28 - 46
-
-
-*/
 
