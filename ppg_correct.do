@@ -554,7 +554,7 @@ preserve
 	save "${ppg_institutions}/institutions", replace
 restore
 
-* merge corrections for merger
+	* corrections for merger
 		* correct accent
 replace institucion = subinstr(institucion, "é", "e",.)
 replace institucion = subinstr(institucion, "ó", "o",.)
@@ -633,14 +633,13 @@ foreach institution of local institutions1 {
 }
 
 
-
-
 * drop if not institution but some special contract payment
 drop if institucion == "contrato fideicomiso inmobiliario poder judicial 2015" | institucion == "contrato fideicomiso inmobiliario tribunal registral administrativo bcr 2014" | institucion == "fideicomiso inmobiliario ccss bcr dos mil diecisiete"
 
-lab def institution_type 1 "central government" 2 "semi-independent institutions" 3 "city councils" 4 "other government agencies" 5 "state-owned enterprise"
-lab val institucion_tipo institution_type
-
+		* label  institution
+lab var institucion_tipo "public contracting institution, category" 
+lab def instutions 1 "central government" 2 "independent institutions" 3 "municipalities" 4 "semi-independent institutions" 5 "state-owned enterprises"
+lab val institucion_tipo institutions
 
 * give the data a frame names
 /*
@@ -850,6 +849,139 @@ duplicates drop numero_procedimiento partida linea cedula_proveedor factor_evalu
 sort numero_procedimiento partida linea cedula_proveedor factor_evaluacion
 duplicates report numero_procedimiento partida linea cedula_proveedor factor_evaluacion
 drop suspicion
+
+
+***********************************************************************
+* 	PART 12:  Verify via text matching if change in reps not wrongly assigned due to misspellings	  			
+***********************************************************************
+* note: this code only needs to be executed when running the do-file for the first time
+* this code creates a list of all the firms (one firm per row) and all their representatives (one column per rep)
+* it then combines all potential within firm repname-repname combinations for their similarity to identify incorrect
+* spellings based on string similarity >= 0.9
+
+frame copy default subtask, replace
+frame change subtask
+
+	* create id for repname-firm
+egen rep_id = group(cedula_proveedor persona_encargada_proveedor)
+
+	* prepare for contracting
+drop _freq
+contract cedula_proveedor rep_id persona_encargada_proveedor
+drop _freq
+
+	* within firm, create a count variable, 1, 2,3 for each rep
+bysort cedula_proveedor (persona_encargada_proveedor) : gen firm_rep_id = sum(persona_encargada_proveedor != persona_encargada_proveedor[_n-1])
+order cedula_proveedor persona_encargada_proveedor rep_id firm_rep_id
+drop rep_id
+reshape wide persona_encargada_proveedor, i(cedula_proveedor) j(firm_rep_id)
+
+/*
+local i = 2
+forvalues x = 1(1)24 {
+	matchit persona_encargada_proveedor`x' persona_encargada_proveedor`i', gen(score`x'`i')
+	local ++i
+	}
+*/	
+local i = 1
+forvalues first  = 1(1)24 {
+		local ++i
+forvalues second = `i'(1)25 {
+	matchit persona_encargada_proveedor`first' persona_encargada_proveedor`second', gen(score`first'`second')
+	}
+}
+
+
+/*
+1 
+23456
+2
+346789	
+*/
+
+	* remove all 1 due to missing values
+foreach x of varlist score12-score2425 {
+	replace `x' = . if `x' == 1
+}
+
+	* create per firms maxscore
+egen maxscore = rowmax(score12-score2425)
+
+	* identify potential problematic cases
+br cedula_proveedor persona_encargada_proveedor* if maxscore >= 0.6
+
+frame change default
+
+* drop remaining inconsistent spellings
+* left
+local p "persona_encargada_proveedor"
+replace `p' = "jonathan marino" if `p' == "jonathan marino g"
+replace `p' = "adrian esteban fernandez castro" if `p' == "adrian fernandez castro"
+replace `p' = "maria auxiliadora alfaro ortega" if `p' == "auxiliadora alfaro ortega"
+replace `p' = "maikol gomez trejos" if `p' == "maykol gomez trejos"
+replace `p' = "maikol gomez trejos" if `p' == "maykolgomez trejos"
+replace `p' = "jorge guillen ruiz" if `p' == "jorge guillen"
+replace `p' = "carlos alejandro ubico duran" if `p' == "carlos ubico duran"
+replace `p' = "hernan antonio hernandez zamora" if `p' == "hernan a. hernandez zamora"
+replace `p' = "ana lucia gonzalez garcia" if `p' == "ana lucia gonzalez"
+replace `p' = "maureen patricia mendoza sanchez" if `p' == "maureen mendoza sanchez"
+replace `p' = "willy alberto jimenez sanchez" if `p' == "willy jimenez sanchez"
+replace `p' = "richard francisco mesen vasquez" if `p' == "richard mesen vasquez"
+replace `p' = "celia maria perezcabello soza" if `p' == ""
+replace `p' = "javier alonso garro sanchez" if `p' == "javier garro"
+replace `p' = "javier alonso garro sanchez" if `p' == "javier garro sanchez"
+replace `p' = "jorge estuardo menendez guardia" if `p' == "jorge menendez guardia"
+replace `p' = "alvaro enrique pantoja viquez" if `p' == "alvaro pantoja viquez"
+replace `p' = "freddy gerardo estrada luna" if `p' == "freddy estrada luna"
+replace `p' = "nelson salvador zuniga chaverri" if `p' == "nelson zuniga chaverri"
+replace `p' = "andres gerardo viquez viquez" if `p' == "andres viquez viquez"
+replace `p' = "rafael angel rojas escalante" if `p' == "rafael rojas"
+replace `p' = "nimrod ezuz" if `p' == "nirmod ezuz"
+replace `p' = "enrique alberto bogantes fernandez" if `p' == "enrique bogantes"
+replace `p' = "jorge guillermo lizano seas" if `p' == "jorge lizano"
+replace `p' = "carla maria cartin de san roman" if `p' == "carla cartin"
+replace `p' = "alfredo gerardo wesson acuna" if `p' == "alfredo wesson"
+replace `p' = "giovanni antonio carrion ballestero" if `p' == "geovanny carrion ballestero"
+replace `p' = "rodrigo barrantes villarevia" if `p' == "rodrigo barrantes"
+replace `p' = "richard alonso rodriguez mora" if `p' == "richard rodriguez"
+replace `p' = "jose alejandro munoz sequeira" if `p' == "alejandro munoz"
+replace `p' = "rolando jose paiz gonzalez" if `p' == "rolando paiz"
+replace `p' = "nelson norlui mattie d jesus" if `p' == "nelson mattie"
+replace `p' = "mario guillermo chi ruano" if `p' == "mario chi"
+
+***********************************************************************
+* 	PART 13: Correct gender of ambiguous first names	  			
+***********************************************************************
+/*
+frame create firmdata
+frame change firmdata
+use "${ppg_final}/sicop_firm", clear
+duplicates tag persona_encargada_proveedor, gen(same_name)
+duplicates tag persona_encargada_proveedor genderfo,gen(same_name_gender)
+br if same_name != same_name_gender
+*/
+
+replace genderfo = 0 if persona_encargada_proveedor == "milagros macias pino"
+replace genderfo = 0 if persona_encargada_proveedor == "andrea ruiz hidalgo"
+replace genderfo = 1  if persona_encargada_proveedor == "cindy angulo monge"
+replace genderfo = 1 if persona_encargada_proveedor == "goldy ponchner geller"
+replace genderfo = 1 if persona_encargada_proveedor == "arie befeler israelsky"
+replace genderfo = 1 if persona_encargada_proveedor == "doris carrillo lopez"
+replace genderfo = 0 if persona_encargada_proveedor == "edwin castro rodriguez"
+replace genderfo = 0 if persona_encargada_proveedor == "gabriel lizama oliger"
+
+
+replace genderfo = 0 if persona_encargada_proveedor == "jose mariano alpizar arredondo"
+replace genderfo = 1 if persona_encargada_proveedor == "karol serrano soto"
+replace genderfo = 1 if persona_encargada_proveedor == "maria de los angeles naranjo vega"
+replace genderfo = 1 if persona_encargada_proveedor == "marisol castillo villalobos"
+replace genderfo = 0 if persona_encargada_proveedor == "norman herrera portugues"
+replace genderfo = 0 if persona_encargada_proveedor == "paulo alberto dodero aguilar"
+replace genderfo = 0 if persona_encargada_proveedor == "rocio segura jimenez"
+replace genderfo = 0 if persona_encargada_proveedor == "simone castellani"
+replace genderfo = 0 if persona_encargada_proveedor == "yanori alfaro alvarez"
+
+
 
 ***********************************************************************
 * 	Save the changes made to the data		  			

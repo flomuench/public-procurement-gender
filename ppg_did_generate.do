@@ -46,7 +46,7 @@ format %-5.0g firm_occurence
 				* adding hours function provides diffence in hours rather than miliseconds
 				* dividing by 24 provides the difference in days
 by cedula_proveedor: gen hours_dif = hours(date_publicacion - date_publicacion[_n-1]), a(date_publicacion)
-gen days_dif = hours_dif/24, a(date_publicacion_dif)
+gen days_dif = hours_dif/24, a(date_publicacion)
 drop hours_dif
 
 	* how much time between publication and adjucation?
