@@ -16,9 +16,9 @@
 ***********************************************************************
 * 	PART START: 	Load data set on subprocess level	  			
 ***********************************************************************
-frame reset
 use "${ppg_final}/sicop_subprocess", clear
-
+frame copy default process, replace
+frame change process
 
 ***********************************************************************
 * 	PART 1: 	prepare the data set 			

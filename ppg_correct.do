@@ -859,6 +859,7 @@ drop suspicion
 * it then combines all potential within firm repname-repname combinations for their similarity to identify incorrect
 * spellings based on string similarity >= 0.9
 
+/* only needs to be executed once: 
 frame copy default subtask, replace
 frame change subtask
 
@@ -911,9 +912,9 @@ egen maxscore = rowmax(score12-score2425)
 br cedula_proveedor persona_encargada_proveedor* if maxscore >= 0.6
 
 frame change default
+*/
 
 * drop remaining inconsistent spellings
-* left
 local p "persona_encargada_proveedor"
 replace `p' = "jonathan marino" if `p' == "jonathan marino g"
 replace `p' = "adrian esteban fernandez castro" if `p' == "adrian fernandez castro"

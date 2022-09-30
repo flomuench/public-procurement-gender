@@ -21,6 +21,9 @@ use "${ppg_final}/sicop_final", clear
 ***********************************************************************
 * 	PART 2: 	collapse data set on sub-process level	  			
 ***********************************************************************
+frame copy default subprocess, replace
+frame change subprocess
+
 sort sub_process_firm_id
 * browse id numero_procedimiento year fecha_publicacion fecha_adjudicacion partida linea nombre_proveedor firmid 
 /* example:
@@ -115,7 +118,9 @@ drop help_id
 	* reshape such that there is only one sub-process per firm, criteria in wide format
 reshape wide factor_evaluacion factor_evaluacion_cat calificacion, i(sub_process_firm_id) j(criteria_id)
 
-
+log using "${ppg_final}/collapse_reshape_error", replace text
+reshape error
+log close
 
 ***********************************************************************
 * 	PART 3: 	order the data set	  			
