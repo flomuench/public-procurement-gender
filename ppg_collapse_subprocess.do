@@ -26,7 +26,17 @@ frame change subprocess
 
 sort sub_process_firm_id
 * browse id numero_procedimiento year fecha_publicacion fecha_adjudicacion partida linea nombre_proveedor firmid 
-/* example:
+/* 
+Problem: 
+
+1: each product has one or several evaluation criteria, 
+for example "price", "experience", "product warranty", which implies each firm is listed several times per product (within a process)
+
+2: what is more, firms can win single products and loose others within
+the same process, which implies that the amount won varies by product
+
+
+example:
 sub_process_id	sub_process_firm_id	numero_procedimiento	partida	linea	nombre_proveedor	cedula_proveedor	factor_evaluacion	calificacion
 23	69	2011cd-000001-0001200001	1	1	mary cruz quiros fallas	111790304	precio	60
 23	69	2011cd-000001-0001200001	1	1	mary cruz quiros fallas	111790304	garantía de producto	20
@@ -37,19 +47,14 @@ sub_process_id	sub_process_firm_id	numero_procedimiento	partida	linea	nombre_pro
 	* create a "j" variable that counts each criteria within sub-process
 bysort sub_process_firm_id (factor_evaluacion) : gen criteria_id = sum(factor_evaluacion != factor_evaluacion[_n-1]), a(sub_process_firm_id)
 	
-/* first code to see which observations obstruct reshaping 
-reshape wide factor_evaluacion calificacion, i(sub_process_firm_id) j(criteria_id)
-log using "${ppg_final}/reshape_problems", replace text
-reshape error
-log close
-*/
 
 	* correct errors so that monto_crc is constant
 egen help_id = group(sub_process_firm_id criteria_id)
 order help_id, a(criteria_id)
 replace monto_crc = 319819 if help_id == 111183
 replace monto_crc = 814080 if help_id == 5823
-replace monto_crc = 43964910 if help_id == 291983
+replace monto_crc = 43964910 if sub_process_firm_id == 263551 & criteria_id == 1
+
 replace monto_crc = 2788.05 if help_id == 395362 | help_id == 395361
 replace monto_crc = 725628.899 if help_id == 523983 | help_id == 523984 | help_id == 523985
 replace monto_crc = 15799 if help_id == 723396
@@ -103,8 +108,45 @@ replace monto_crc = 12000 if help_id == 771029
 replace monto_crc = 12000 if help_id == 771029
 replace monto_crc = 12000 if help_id == 771029
 
+* 
+replace monto_crc = 215140 if sub_process_firm_id == 4251 & criteria_id == 2
+replace monto_crc = 814080 if sub_process_firm_id == 4270 & criteria_id == 2
+replace monto_crc = 479700  if sub_process_firm_id == 4290 & criteria_id == 2
 
-replace monto_crc = monto_crc[_n+1] if monto_crc == . & sub_process_firm_id == sub_process_firm_id & sub_process_id == sub_process_id
+replace monto_crc = 173562573 if sub_process_firm_id == 100569 & criteria_id == 2
+
+replace monto_crc = 43964910 if sub_process_firm_id == 263551  & criteria_id == 1
+replace monto_crc = 39155250 if sub_process_firm_id == 413053  & criteria_id ==4
+replace monto_crc = 39155250 if sub_process_firm_id == 413054  & criteria_id == 1
+replace monto_crc = 725629 if sub_process_firm_id == 437497  & criteria_id == 2
+
+replace monto_crc = 194900 if sub_process_firm_id == 599652  & criteria_id == 2
+replace monto_crc = 204000 if sub_process_firm_id == 599663 & criteria_id == 1
+replace monto_crc = 115800 if sub_process_firm_id == 599678 & criteria_id == 2
+replace monto_crc = 410300 if sub_process_firm_id == 599722 & criteria_id == 1
+replace monto_crc = 900000 if sub_process_firm_id == 599725 & criteria_id == 2
+
+
+replace monto_crc = 381900 if sub_process_firm_id == 615035  & criteria_id == 1
+replace monto_crc = 352200 if sub_process_firm_id == 615041 & criteria_id == 2
+
+replace monto_crc = 707000 if sub_process_firm_id == 615056 & criteria_id == 1
+replace monto_crc = 877800 if sub_process_firm_id == 615059  & criteria_id == 2
+replace monto_crc = 1021977 if sub_process_firm_id == 622680 & criteria_id == 2
+
+replace monto_crc = 536796 if sub_process_firm_id == 622686 & criteria_id == 1
+replace monto_crc = 80000 if sub_process_firm_id == 623216  & criteria_id == 1
+replace monto_crc = 6951976 if sub_process_firm_id == 712100 & criteria_id == 1
+replace monto_crc = 6951976 if sub_process_firm_id == 712100 & criteria_id == 5
+
+replace monto_crc = 331927 if sub_process_firm_id == 714058  & criteria_id == 4
+
+replace monto_crc = 790250  if sub_process_firm_id == 764941 & criteria_id == 2
+replace monto_crc = 948536 if sub_process_firm_id == 764945  & criteria_id == 2
+
+
+
+*replace monto_crc = monto_crc[_n+1] if monto_crc == . & sub_process_firm_id == sub_process_firm_id & sub_process_id == sub_process_id
 
 
 
@@ -113,10 +155,16 @@ foreach x of local wrong_values {
 	replace monto_crc = . if help_id ==  `x'
 }
 
+
+	* drop all variables that were created based on monto_crc
 drop help_id
 
 	* reshape such that there is only one sub-process per firm, criteria in wide format
-reshape wide factor_evaluacion factor_evaluacion_cat calificacion, i(sub_process_firm_id) j(criteria_id)
+local reshape_vars1 "factor_evaluacion factor_evaluacion_cat calificacion"
+reshape wide `reshape_vars1', i(sub_process_firm_id) j(criteria_id)
+
+
+
 
 log using "${ppg_final}/collapse_reshape_error", replace text
 reshape error
