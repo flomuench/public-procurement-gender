@@ -1060,7 +1060,13 @@ replace monto_crc = 479700  if sub_process_firm_id == 4290 & criteria_id == 2
 replace monto_crc = 173562573.11 if sub_process_firm_id == 100569 & criteria_id == 2
 
 replace monto_crc = 43964910 if sub_process_firm_id == 263551  & criteria_id == 1
+
+replace monto_crc = 39155250 if sub_process_firm_id == 413053  & criteria_id == 1
+replace monto_crc = 39155250 if sub_process_firm_id == 413053  & criteria_id == 2
+replace monto_crc = 39155250 if sub_process_firm_id == 413053  & criteria_id == 3
 replace monto_crc = 39155250 if sub_process_firm_id == 413053  & criteria_id == 4
+
+
 replace monto_crc = 39155250 if sub_process_firm_id == 413054  & criteria_id == 1
 replace monto_crc = 39155250 if sub_process_firm_id == 413054  & criteria_id == 2
 replace monto_crc = 39155250 if sub_process_firm_id == 413054  & criteria_id == 3

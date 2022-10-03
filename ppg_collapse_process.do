@@ -37,12 +37,7 @@ vary: cantidad, precio, monto*, clasificacion_objeto, factor_evaluacion, calific
 order sub_process_firm_id sub_process_id numero_procedimiento partida linea nombre_proveedor cedula_proveedor monto_crc cantidad precio_crc clasificacion_objeto clasificacion_objeto_des clasi_bien_serv
 format %-4.0g sub_process_firm_id sub_process_id partida linea
 
-
-		* 6 companies with a total of 424 bids have missing rep name --> drop
-codebook cedula_proveedor if persona_encargada_proveedor == ""
-drop if persona_encargada_proveedor == ""
 	
-
 ***********************************************************************
 * 	PART 2: concatenate product & product specific variables, such as evaluation criteria & 
 ***********************************************************************

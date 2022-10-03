@@ -39,6 +39,12 @@ histogram days_dif, width(1)
 histogram days_dif if days_dif < 437, width(1)
 histogram days_dif if days_dif < 100, width(1) yline(30)
 
+
+sum days_dif if time_to_treat == 1, d /* suggests only 25% within 30 days  */
+sum days_dif if time_to_treat == 0, d /* suggests only 50% within 30 days  */
+sum days_dif if time_to_treat == -1, d /* suggests only 50% within 30 days  */
+
+
 ***********************************************************************
 * 	PART 2: Days contract publication and contract allocation
 ***********************************************************************
@@ -55,29 +61,34 @@ min or quickest contract allocation happens in one days or even less, quickest 2
 ***********************************************************************
 * 	PART 3:  visualise how many lags and leaps before treatment (change in reps gender)
 ***********************************************************************
-cd "$ppg_figures"
+cd "$ppg_figures/"
 	
-	* visualise number of observations per process around change
-twoway  (histogram nttt50 if nttt50 <= 100 & nttt50 > = 0 & m2f == 1, width(1) frequency color(maroon%30)) ///
-		(histogram nttt50 if nttt50 <= 100 & nttt50 > = 0 & m2f == 0, width(1) frequency color(navy%30)), ///
-			xline(50) ///
-			legend(order(1 "Male to female" 2 "Male to male")) ///
-			title("{bf:Lags and leaps around gender change of firm representative}") ///
-			subtitle("{it:Process-level by treatment and control group}") ///
-			xtitle("Time to treatment") xlabel(#10) ///
-			note("Bin width = 1. N = 39,876 processes out of which 1,761 male-to-female & 38,115 male-to-male.", size(vsmall)) ///
-			ylabel(0(50)500) ytitle("Total number of procurement processes")
-*graph export lags_leaps_around_gender_change_process_level_m2f_50.png, replace
+	* average number of bids
+sum time_to_treat, d /* 12 */
+	
+	* m2f & m2m
+twoway  ///
+	(histogram time_to_treat if time_to_treat >= -50 & time_to_treat <= 50 & m2f == 1, bin(100) frequency color(black%30)) ///
+	(histogram time_to_treat if time_to_treat > -50 & time_to_treat <= 50 & m2f == 0, bin(100) frequency color(gs10%30)), ///
+			xline(0) ///
+			legend(order(1 "Male to female" 2 "Male to male") pos(6) rows(1)) ///
+			xtitle("time to treatment") xlabel(#10) ///
+			ylabel(0(50)350) ytitle("total bids") ///
+			xsize(2) ysize(1) ///
+			name(leads_lags_ttt_m2f, replace)
+graph export "$ppg_figures/leads_lags_ttt_m2f.png", replace
 			
-twoway  (histogram nttt10 if nttt10 <= 20 & nttt10 > = 0 & m2f == 1, width(1) frequency color(maroon%30)) ///
-		(histogram nttt10 if nttt10 <= 20 & nttt10 > = 0 & m2f == 0, width(1) frequency color(navy%30)), ///
-			xline(20) ///
-			legend(order(1 "Male to female" 2 "Male to male")) ///
-			title("{bf:Lags and leaps around gender change of firm representative}") ///
-			subtitle("{it:Process-level by treatment and control group}") ///
-			xtitle("Time to treatment") xlabel(#10) ///
-			ylabel(0(50)500) ytitle("Total number of procurement processes")
-*graph export lags_leaps_around_gender_change_process_level_m2f_10.png, replace
+	* f2m & f2f
+twoway  ///
+	(histogram time_to_treat if time_to_treat >= -50 & time_to_treat <= 50 & f2m == 1, bin(100) frequency color(black%80)) ///
+	(histogram time_to_treat if time_to_treat > -50 & time_to_treat <= 50 & f2m == 0, bin(100) frequency color(gs10%50)), ///
+			xline(0) ///
+			legend(order(1 "Female to male" 2 "Female to female") pos(6) rows(1)) ///
+			xtitle("time to treatment") xlabel(#10) ///
+			ylabel(0(50)350) ytitle("total bids") ///
+			xsize(2) ysize(1) ///
+			name(leads_lags_ttt_f2m, replace)
+graph export "$ppg_figures/leads_lags_ttt_f2m.png", replace
 
 ***********************************************************************
 * 	PART 3:  balance table 
@@ -93,93 +104,41 @@ iebaltab `balvar', grpvar(m2f) save(baltab_m2f) replace ///
 ***********************************************************************
 * 	PART 4:  Amount won (by gender) 
 ***********************************************************************
-histogram monto_crc if monto_crc < 10000000 & monto_crc > 0
-
+sum monto_usd_w if m2f == 1, d /* 50% = 0 */
 
 	* by gender change of firm
-twoway  (histogram monto_crc if monto_crc < 10000000 & monto_crc > 0 & m2f == 1, width(1) frequency color(maroon%30)) ///
-		(histogram monto_crc if monto_crc < 10000000 & monto_crc > 0 & m2f == 0, width(1) frequency color(navy%30)), ///
-			legend(order(1 "Male to female" 2 "Male to male")) ///
-			title("{bf: Amount by female2male and male2male firms}") ///
-			subtitle("{it:Process-level by treatment and control group}") ///
-			xtitle("Time to treatment") xlabel(#10) ///
-			note("Bin width = 1. N = 39,876 processes out of which 1,761 male-to-female & 38,115 male-to-male.", size(vsmall)) ///
-			ylabel(0(50)500) ytitle("Total number of procurement processes")
+twoway  ( monto_usd_w if m2f == 1 & monto_usd < 110143, width(1) frequency color(maroon%30)) ///
+		( monto_usd_w if m2f == 0 & monto_usd < 110143, width(1) frequency color(navy%30)), ///
+			legend(order(1 "Male to female" 2 "Male to male") pos(6) rows(1)) ///
+			subtitle("{it:bid level by treatment and control group}") ///
+			xtitle("time to treatment") xlabel(#10)
 
 		
 	* sum won before and after change of representative
-graph bar (sum) monto_crc if nttt10 <=20, over(post10) over(m2f) blabel(bar) ///
-	ytitle("total amount won", size(vsmall)) ///
-	legend(off) ///
-	name(sum_won_gender_ba, replace)
-
-graph bar (sum) monto_crc if nttt10 <=20, over(post10) over(female_po, lab(labsize(vsmall))) over(m2f) blabel(bar, size(vsmall)) ///
-	ytitle("total amount won", size(vsmall)) ///
-	legend(off) ///
-	name(sum_won_gender_ba_po, replace)
-
-graph bar (mean) monto_crc if nttt10 <=20, over(post10) over(m2f) blabel(bar) ///
-	ytitle("average amount won", size(vsmall)) ///
-	legend(off) ///
-	name(mean_won_gender_ba, replace)
-
-graph bar (mean) monto_crc if nttt10 <=20, over(post10) over(female_po, lab(labsize(vsmall))) over(m2f) blabel(bar, size(vsmall)) ///
-	ytitle("average amount won", size(vsmall)) ///
-	name(mean_won_gender_ba_po, replace)
-
-grc1leg sum_won_gender_ba sum_won_gender_ba_po mean_won_gender_ba mean_won_gender_ba_po, ///
-	title("{bf:Amount won 10 bids before and after change in representatives}") ///
-	subtitle("{it: Female2male vs. male2male firms under (fe-) male procurement officials}", size(small)) ///
-	legendfrom(mean_won_gender_ba_po)
-gr export won_before_after10.pgn, replace
-
-
-
-
-
-
-
-
-
-* archive of code
-histogram time_to_treat, title("{bf:Lags and leaps around gender change of firm representative}") ///
-	subtitle("{it:Process-level}") ///
-	xtitle("Number of bids") xlabel(#10) ///
-	note("Bin width = ", size(small))
+		* m2f
+graph bar (sum) monto_usd if inrange(time_to_treat,-10, 10), over(post) over(m2f) ///
+	blabel(bar) ///
+	ytitle("total amount won, usd", size(medium)) ///
+	name(sum_won_gender_ba_m2f, replace)
 	
-histogram time_to_treat if time_to_treat <= 50 & time_to_treat > = - 50, frequency ///
-	width(5) ///
-	title("{bf:Lags and leaps around gender change of firm representative}") ///
-	subtitle("{it:Process-level}") ///
-	xtitle("Time to treatment") xlabel(#10) ///
-	note("Bin width = 5", size(small)) ///
-	ylabel(0(500)4000) ytitle("Total number of procurement processes")
-graph export lags_leaps_around_gender_change_process_level.png, replace
-
-histogram time_to_treat if time_to_treat <= 50 & time_to_treat > = - 50 & f2m!= ., frequency ///
-	width(1) ///
-	title("{bf:Lags and leaps around gender change of firm representative}") ///
-	subtitle("{it:Process-level}") ///
-	xtitle("Time to treatment") xlabel(#10) ///
-	note("Bin width = 1. N = 8165 processes.", size(small)) ///
-	ylabel(0(10)200) ytitle("Total number of procurement processes")
-graph export lags_leaps_around_gender_change_process_level_sample.png, replace
-twoway  (histogram time_to_treat if time_to_treat <= 50 & time_to_treat > = - 50 & f2m == 1, width(1) frequency color(maroon%30)) ///
-		(histogram time_to_treat if time_to_treat <= 50 & time_to_treat > = - 50 & f2m == 0, width(1) frequency color(navy%30)), ///
-			legend(order(1 "Female to male" 2 "Female to female")) ///
-			title("{bf:Lags and leaps around gender change of firm representative}") ///
-			subtitle("{it:Process-level by treatment and control group}") ///
-			xtitle("Time to treatment") xlabel(#10) ///
-			note("Bin width = 1. N = 8165 processes out of which 2,385 female-to-male & female-to-female 5,780.", size(vsmall)) ///
-			ylabel(0(10)100) ytitle("Total number of procurement processes")
-graph export lags_leaps_around_gender_change_process_level_f2m.png, replace
+		* f2m
+graph bar (sum) monto_usd if inrange(time_to_treat,-10, 10), over(post) over(f2m) ///
+	blabel(bar) ///
+	ytitle("total amount won, usd", size(vsmall)) ///
+	name(sum_won_gender_ba_f2m, replace)
 	
-twoway  (histogram time_to_treat if time_to_treat <= 50 & time_to_treat > = - 50 & m2f == 1, width(1) frequency color(maroon%30)) ///
-		(histogram time_to_treat if time_to_treat <= 50 & time_to_treat > = - 50 & m2f == 0, width(1) frequency color(navy%30)), ///
-			legend(order(1 "Male to female" 2 "Male to male")) ///
-			title("{bf:Lags and leaps around gender change of firm representative}") ///
-			subtitle("{it:Process-level by treatment and control group}") ///
-			xtitle("Time to treatment") xlabel(#10) ///
-			note("Bin width = 1. N = 39,876 processes out of which 1,761 male-to-female & 38,115 male-to-male.", size(vsmall)) ///
-			ylabel(0(50)500) ytitle("Total number of procurement processes")
-graph export lags_leaps_around_gender_change_process_level_m2f.png, replace
+	
+		* m2f
+graph bar (sum) monto_usd if inrange(time_to_treat,-10, 10), over(post) over(m2f) over(genderpo) ///
+	blabel(bar) ///
+	ytitle("total amount won, usd", size(medium)) ///
+	name(sum_won_gender_ba_m2f_po, replace)
+	
+		* f2m
+graph bar (sum) monto_usd if inrange(time_to_treat,-10, 10), over(post) over(f2m) over(genderpo) ///
+	blabel(bar) ///
+	ytitle("total amount won, usd", size(vsmall)) ///
+	name(sum_won_gender_ba_f2m, replace)
+	
+
+
