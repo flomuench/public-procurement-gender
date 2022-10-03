@@ -178,7 +178,7 @@ if (1) do "${ppg_github}/ppg_firm_level_statistics.do"
 * 	PART 6: 	Multivariate Regression analysis		  	
 ***********************************************************************
 /* --------------------------------------------------------------------
-	PART 5.1.: multivariate regression analysis
+	PART 6.1.: multivariate regression analysis
 	Requires: sicop_replicable
 ----------------------------------------------------------------------*/
 if (0) do "${ppg_github}/ppg_multivariate_regression.do"
