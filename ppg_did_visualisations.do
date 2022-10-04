@@ -44,10 +44,26 @@ histogram days_dif, width(1)
 histogram days_dif if days_dif < 437, width(1)
 histogram days_dif if days_dif < 100, width(1) yline(30)
 
+forvalues x = 0(2)10 {
+	sum days_dif if time_to_treat == `x', d
+	mat s`x' = (r(mean), r(p50), r(p75), r(p90))
+	
 
+}
+
+mat days_between_bid = s10\s8\s6\s4\s2\s0\s-2\s-4\s-6\s-8\s-10
+
+
+	local mean`x' = r(mean)
+	local median`x' = r(p50)
+	local p75`x' = r(p75)
+	local p90`x' = r(p90)
+
+sum days_dif if time_to_treat == 7, d /* suggests only 25% within 30 days  */
 sum days_dif if time_to_treat == 1, d /* suggests only 25% within 30 days  */
 sum days_dif if time_to_treat == 0, d /* suggests only 50% within 30 days  */
 sum days_dif if time_to_treat == -1, d /* suggests only 50% within 30 days  */
+sum days_dif if time_to_treat == -7, d /* mean = 47, med = 14, 75p = 14  */
 
 
 ***********************************************************************
@@ -144,7 +160,7 @@ graph bar (mean) monto_usd if inrange(time_to_treat,-10, 10), over(post) over(f2
 ***********************************************************************
 * 	PART 5:  points
 ***********************************************************************
-	* sum won before and after change of representative
+	* sum points before and after change of representative
 		* m2f
 graph bar (mean) total_points if inrange(time_to_treat,-10, 10), over(post) over(m2f) ///
 	blabel(bar) ///
@@ -179,7 +195,35 @@ graph bar (mean) total_points if inrange(time_to_treat,-10, 10), over(post) over
 ***********************************************************************
 * 	PART 6:  times won
 ***********************************************************************
-
+	* sum times won before and after change of representative
+		* m2f
+graph bar (mean) bid_won if inrange(time_to_treat,-10, 10), over(post) over(m2f) ///
+	blabel(bar) ///
+	ytitle("bids  won", size(medium)) ///
+	legend(pos(6) rows(1)) ///
+	name(mean_won_bids__gender_ba_m2f, replace)
+	
+		* f2m
+graph bar (mean) bid_won if inrange(time_to_treat,-10, 10), over(post) over(f2m) ///
+	blabel(bar) ///
+	ytitle("bids  won", size(vsmall)) ///
+	legend(pos(6) rows(1)) ///
+	name(mean_won_bids__gender_ba_f2m, replace)
+	
+	
+		* m2f, conditional po
+graph bar (mean) bid_won if inrange(time_to_treat,-10, 10), over(post) over(m2f) over(genderpo) ///
+	blabel(bar) ///
+	ytitle("bids  won", size(medium)) ///
+	legend(pos(6) rows(1)) ///
+	name(mean_won_bids__gender_ba_m2f_po, replace)
+	
+		* f2m, conditional po
+graph bar (mean) bid_won if inrange(time_to_treat,-10, 10), over(post) over(f2m) over(genderpo) ///
+	blabel(bar) ///
+	ytitle("bids  won", size(vsmall)) ///
+	legend(pos(6) rows(1)) ///
+	name(mean_won_bids__gender_ba_f2m_po, replace)
 	
 
 

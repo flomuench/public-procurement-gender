@@ -1,5 +1,5 @@
 ***********************************************************************
-* 			ppg did event study regressions + coefplot		
+* 			ppg Dynamic DiD event study regressions + coefplot		
 ***********************************************************************
 *																	  
 *	PURPOSE: replace					  							  
@@ -12,9 +12,8 @@
 *	4)  		  				  	  
 *																	  															      
 *	Author:  	Florian Muench						  
-*	ID variable: 	process level id = id ; firm level id = firmid			  					  
-*	Requires: 	  	sicop_did.dta							  
-*	Creates:  		sicop_did.dta	                          
+*	ID variable: 	firm_id/cedula_proveedor = firm id ; process id = 
+*	Requires: 	  	sicop_process.dta							  
 *	
 ***********************************************************************
 * 	PART START: 	Load, directory for export, declare panel		  			
@@ -23,7 +22,7 @@
 set maxvar 32767
 set matsize 11000
 
-use "${ppg_intermediate}/sicop_did", clear
+use "${ppg_intermediate}/sicop_process", clear
 	
 	* set export folder for regression tables
 cd "$ppg_regression_tables"
@@ -32,39 +31,10 @@ cd "$ppg_regression_tables"
 xtset firmid firm_occurence, delta(1)
 	/* requires capture drop due to some mistake */
 
-***********************************************************************
-* 	PART 2: pooled bid level multivariate regression
-***********************************************************************	
-	* replication of pooled bid level mv regression but removing subcontracts
-cd "$ppg_pooled"
-logit winner i.female_firm##i.female_po $process_controls $firm_controls, vce(robust)
-margins i.female_firm##i.female_po, post
-outreg2 using pooled_bidlevel, excel replace
-estimates store pooled_bidlevel, title("Predicted probabilities")
-coefplot pooled_bidlevel, drop(_cons) xline(0) ///
-	xtitle("Predicted probability of winning a public contract", size(small)) xlab(0.2(0.01)0.3) ///
-	graphr(color(white)) bgcol(white) plotr(color(white)) ///
-	title("{bf:Do procurement officials discriminate in their allocation decision?}") ///
-	subtitle("Full sample", size(small)) ///
-	note("Sample size = 169,105 bids.", size(vsmall))
-gr export pooled_bidlevel.png, replace
-	
-	
-	* alternative identification: compare the same firm either represented by a women or a men
-logit winner i.female_firm##i.female_po $process_controls $firm_controls if multiple_change == 1, vce(robust)
-margins i.female_firm##i.female_po, post
-outreg2 using pooled_switchers, excel replace
-estimates store pooled_switchers, title("Predicted probabilities")
-coefplot pooled_switchers, drop(_cons) xline(0) ///
-	xtitle("Predicted probability of winning a public contract", size(small)) xlab(0.2(0.01)0.3) ///
-	graphr(color(white)) bgcol(white) plotr(color(white)) ///
-	title("{bf:Do procurement officials discriminate in their allocation decision?}") ///
-	subtitle("Sample: Only firms switching between male & female representatives.", size(small)) ///
-	note("Sample size = 44,270 bids.", size(vsmall))
-gr export pooled_switchers.png, replace
+
 
 ***********************************************************************
-* 	PART 3: Event study DiD predicted probabilities of winning public contract
+* 	PART 1: Event study DiD predicted probabilities of winning public contract
 ***********************************************************************	
 /* notes: 
 	* problem: stata does not allow negative factors
@@ -511,7 +481,7 @@ restore
 **** Archive
 	/*gr combine D3_malePO_10 D3_femalePO_10, title("{bf: Event study triple difference-in-difference}") ///
 		subtitle("{it:Male-to-female vs. male to male}") ///
-		note("Sample size = 6959 procurement processes of firms with a single change in their representatives gender. 85% are m2m.", size(vsmall)) */
+		note("Sample size = 6959 procurement processes of firms with a single change in their representatives gender. 85% are m2m.", size(vsmall)) 
 
 
 	gen coef_m2f = .
@@ -523,3 +493,38 @@ restore
 
 	gen se_m2f = .
 	gen se_m2m = .
+
+	
+	
+***********************************************************************
+* 	PART 2: pooled bid level multivariate regression
+***********************************************************************	
+	* replication of pooled bid level mv regression but removing subcontracts
+cd "$ppg_pooled"
+logit winner i.female_firm##i.female_po $process_controls $firm_controls, vce(robust)
+margins i.female_firm##i.female_po, post
+outreg2 using pooled_bidlevel, excel replace
+estimates store pooled_bidlevel, title("Predicted probabilities")
+coefplot pooled_bidlevel, drop(_cons) xline(0) ///
+	xtitle("Predicted probability of winning a public contract", size(small)) xlab(0.2(0.01)0.3) ///
+	graphr(color(white)) bgcol(white) plotr(color(white)) ///
+	title("{bf:Do procurement officials discriminate in their allocation decision?}") ///
+	subtitle("Full sample", size(small)) ///
+	note("Sample size = 169,105 bids.", size(vsmall))
+gr export pooled_bidlevel.png, replace
+	
+	
+	* alternative identification: compare the same firm either represented by a women or a men
+logit winner i.female_firm##i.female_po $process_controls $firm_controls if multiple_change == 1, vce(robust)
+margins i.female_firm##i.female_po, post
+outreg2 using pooled_switchers, excel replace
+estimates store pooled_switchers, title("Predicted probabilities")
+coefplot pooled_switchers, drop(_cons) xline(0) ///
+	xtitle("Predicted probability of winning a public contract", size(small)) xlab(0.2(0.01)0.3) ///
+	graphr(color(white)) bgcol(white) plotr(color(white)) ///
+	title("{bf:Do procurement officials discriminate in their allocation decision?}") ///
+	subtitle("Sample: Only firms switching between male & female representatives.", size(small)) ///
+	note("Sample size = 44,270 bids.", size(vsmall))
+gr export pooled_switchers.png, replace
+
+*/
