@@ -916,7 +916,7 @@ frame change default
 
 * drop remaining inconsistent spellings
 local p "persona_encargada_proveedor"
-replace `p' = "jonathan marino" if `p' == "jonathan marino g"
+replace `p' = "jonathan marino" if `p' == "jonathan marino  g"
 replace `p' = "adrian esteban fernandez castro" if `p' == "adrian fernandez castro"
 replace `p' = "maria auxiliadora alfaro ortega" if `p' == "auxiliadora alfaro ortega"
 replace `p' = "maikol gomez trejos" if `p' == "maykol gomez trejos"

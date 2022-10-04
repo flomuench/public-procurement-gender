@@ -68,6 +68,41 @@ foreach var of local loopvars {
 	by `id': replace agg_`var' = agg_`var'[_N]
 }
 
+***********************************************************************
+* 	PART 2: put var labels into local to keep them
+***********************************************************************
+/* useful linka: https://raw.githubusercontent.com/etjernst/Materials/master/stata/copylabels.do
+http://shafiquejamal.blogspot.com/2011/05/stata-tip-restoring-value-labels-after.html
+*/
+
+		* Variable labels
+
+* Loop over all variables
+foreach v of var * {
+  * Store variable label in a local
+        local lab`v' : variable label `v'
+            if `"`lab`v''"' == "" {
+            local lab`v' "`v'"
+        }
+}
+
+
+		* Value labels
+// This is the list of variables for which we want to save the value labels.
+label dir
+local list_of_valuelables = r(names)
+
+// note the names of the label values for each variable that has a label value attached to it: need the variable name - value label correspodence
+   local list_of_vars_w_valuelables
+   foreach var of varlist * {
+   local templocal : value label `var'
+   if ("`templocal'" != "") {
+      local varlabel_`var' : value label `var'
+      di "`var': `varlabel_`var''"
+      local list_of_vars_w_valuelables "`list_of_vars_w_valuelables' `var'"
+   }
+}
+di "`list_of_vars_w_valuelables'"
 
 ***********************************************************************
 * 	PART 3: collapse data from sub_sub_process to process level 			
@@ -88,6 +123,22 @@ collapse (sum) `sumvars' (firstnm) `keepvars', by(`byvars')
 
 		* sort data by process-firm-firm-firmrep
 sort `byvars'
+
+***********************************************************************
+* 	PART 4: re-attach the variable & value labels 			
+***********************************************************************
+	* variable labels
+foreach v of var * {
+        label var `v' "`lab`v''"
+}
+
+
+	* value labels
+*do $path_for_tempfiles/label_values.do
+// reattach the label values
+foreach var of local list_of_vars_w_valuelables {
+   cap label values `var' `varlabel_`var''
+}
 
 
 ***********************************************************************

@@ -21,6 +21,11 @@
 use "${ppg_final}/sicop_process", clear
 
 
+	* declare panel data
+order firm_id, a(cedula_proveedor)
+xtset firm_id time_to_treat
+
+
 ***********************************************************************
 * 	PART 1: Days between contract publication of subsequent bids
 ***********************************************************************
@@ -105,40 +110,76 @@ iebaltab `balvar', grpvar(m2f) save(baltab_m2f) replace ///
 * 	PART 4:  Amount won (by gender) 
 ***********************************************************************
 sum monto_usd_w if m2f == 1, d /* 50% = 0 */
-
-	* by gender change of firm
-twoway  ( monto_usd_w if m2f == 1 & monto_usd < 110143, width(1) frequency color(maroon%30)) ///
-		( monto_usd_w if m2f == 0 & monto_usd < 110143, width(1) frequency color(navy%30)), ///
-			legend(order(1 "Male to female" 2 "Male to male") pos(6) rows(1)) ///
-			subtitle("{it:bid level by treatment and control group}") ///
-			xtitle("time to treatment") xlabel(#10)
-
 		
 	* sum won before and after change of representative
 		* m2f
-graph bar (sum) monto_usd if inrange(time_to_treat,-10, 10), over(post) over(m2f) ///
+graph bar (mean) monto_usd if inrange(time_to_treat,-10, 10), over(post) over(m2f) ///
 	blabel(bar) ///
 	ytitle("total amount won, usd", size(medium)) ///
-	name(sum_won_gender_ba_m2f, replace)
+	legend(pos(6) rows(1)) ///
+	name(mean_won_amount_gender_ba_m2f, replace)
 	
 		* f2m
-graph bar (sum) monto_usd if inrange(time_to_treat,-10, 10), over(post) over(f2m) ///
+graph bar (mean) monto_usd if inrange(time_to_treat,-10, 10), over(post) over(f2m) ///
 	blabel(bar) ///
 	ytitle("total amount won, usd", size(vsmall)) ///
-	name(sum_won_gender_ba_f2m, replace)
+	legend(pos(6) rows(1)) ///
+	name(mean_won_amount_gender_ba_f2m, replace)
 	
 	
 		* m2f
-graph bar (sum) monto_usd if inrange(time_to_treat,-10, 10), over(post) over(m2f) over(genderpo) ///
+graph bar (mean) monto_usd if inrange(time_to_treat,-10, 10), over(post) over(m2f) over(genderpo) ///
 	blabel(bar) ///
 	ytitle("total amount won, usd", size(medium)) ///
-	name(sum_won_gender_ba_m2f_po, replace)
+	legend(pos(6) rows(1)) ///
+	name(mean_won_amount_gender_ba_m2f_po, replace)
 	
 		* f2m
-graph bar (sum) monto_usd if inrange(time_to_treat,-10, 10), over(post) over(f2m) over(genderpo) ///
+graph bar (mean) monto_usd if inrange(time_to_treat,-10, 10), over(post) over(f2m) over(genderpo) ///
 	blabel(bar) ///
 	ytitle("total amount won, usd", size(vsmall)) ///
-	name(sum_won_gender_ba_f2m, replace)
+	legend(pos(6) rows(1)) ///
+	name(mean_won_amount_gender_ba_f2m_po, replace)
+	
+***********************************************************************
+* 	PART 5:  points
+***********************************************************************
+	* sum won before and after change of representative
+		* m2f
+graph bar (mean) total_points if inrange(time_to_treat,-10, 10), over(post) over(m2f) ///
+	blabel(bar) ///
+	ytitle("total points won", size(medium)) ///
+	legend(pos(6) rows(1)) ///
+	name(mean_won_points_gender_ba_m2f, replace)
+	
+		* f2m
+graph bar (mean) total_points if inrange(time_to_treat,-10, 10), over(post) over(f2m) ///
+	blabel(bar) ///
+	ytitle("total points won", size(vsmall)) ///
+	legend(pos(6) rows(1)) ///
+	name(mean_won_points_gender_ba_f2m, replace)
+	
+	
+		* m2f, conditional po
+graph bar (mean) total_points if inrange(time_to_treat,-10, 10), over(post) over(m2f) over(genderpo) ///
+	blabel(bar) ///
+	ytitle("total points won", size(medium)) ///
+	legend(pos(6) rows(1)) ///
+	name(mean_won_points_gender_ba_m2f_po, replace)
+	
+		* f2m, conditional po
+graph bar (mean) total_points if inrange(time_to_treat,-10, 10), over(post) over(f2m) over(genderpo) ///
+	blabel(bar) ///
+	ytitle("total points won", size(vsmall)) ///
+	legend(pos(6) rows(1)) ///
+	name(mean_won_points_gender_ba_f2m_po, replace)
+
+
+
+***********************************************************************
+* 	PART 6:  times won
+***********************************************************************
+
 	
 
 
