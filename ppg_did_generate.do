@@ -332,6 +332,13 @@ label def ab 1 "after" 0 "before"
 label values post* ab
 
 ***********************************************************************
+* 	Create cumulative experience variable in terms of bids won			
+***********************************************************************
+* alternative could also be cumulative amount won, however this would weigh big contracts strongly
+bysort cedula_proveedor (firm_occurence): gen cum_bids_won = sum(bid_won), a(bid_won)
+lab var cum_bids_won "cumulative bids won"
+
+***********************************************************************
 * 	Save new as sicop did 			
 ***********************************************************************
 drop `value_before' `treat_value_before1' `control_value_before1' `control_value_before2' `treat_value_before2' `gender_change_count' `fonly' `monly'

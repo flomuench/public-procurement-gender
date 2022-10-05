@@ -1109,6 +1109,12 @@ foreach x of local wrong_values {
 drop help_id criteria_id sub_process_firm_id
 
 ***********************************************************************
+* 	PART 15: replace missing firm_location with "unclassified" category
+***********************************************************************
+replace firm_location = 8 if firm_location == .
+lab def Region 8 undefined, add
+lab val firm_location Region
+***********************************************************************
 * 	Save the changes made to the data		  			
 ***********************************************************************
 save "${ppg_intermediate}/sicop_replicable", replace

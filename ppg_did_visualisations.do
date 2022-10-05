@@ -20,11 +20,9 @@
 ***********************************************************************
 use "${ppg_final}/sicop_process", clear
 
-
-	* declare panel data
+	* declare panel
 order firm_id, a(cedula_proveedor)
 xtset firm_id time_to_treat
-
 
 ***********************************************************************
 * 	PART 1: Days between contract publication of subsequent bids

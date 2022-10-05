@@ -22,27 +22,118 @@
 set maxvar 32767
 set matsize 11000
 
-use "${ppg_intermediate}/sicop_process", clear
+use "${ppg_final}/sicop_process", clear
 	
 	* set export folder for regression tables
-cd "$ppg_regression_tables"
+*cd "$ppg_regression_tables"
 
 	* set panel data
-xtset firmid firm_occurence, delta(1)
-	/* requires capture drop due to some mistake */
+	* declare panel
+order firm_id, a(cedula_proveedor)
+xtset firm_id time_to_treat, delta(1)
 
-
-
-***********************************************************************
-* 	PART 1: Event study DiD predicted probabilities of winning public contract
-***********************************************************************	
+	
+	* define window size & shift factor
 /* notes: 
 	* problem: stata does not allow negative factors
 	* solution: shift time to treat variable by a certain factor to make it all positive
 	* shift factor should correspond to event window width, which needs to be determined arbitrarily
 */
+
+	* define max. event window and shift factor
+gen nttt = time_to_treat + 50 if time_to_treat != .
+
+
+	* replace missing values for control variables
+nmissing tipo_s year institucion_tipo firm_size age firm_location cum_bids_won if m2f != .
+
+	* age missing for 265
+	* firm_location missing for 79
+gen age_adj = age
+sum age if m2f != . | f2m != ., d
+replace age_adj = r(p50) if age == .
+
+	* gen a dummy for firm having missing values for control variables
+gen missing_data = (age == .) | (firm_location == 8)
+
+	* define X control variables
+local process_controls "i.tipo_s i.year i.institucion_tipo"
+local firm_controls "i.firm_size c.age_adj i.firm_location c.cum_bids_won"
 	
-	* set window size & shift factor
+
+***********************************************************************
+* 	PART 1: Event study/Dynamic DiD: 
+***********************************************************************	
+	* m2f defined for 22,000 bids
+
+	* estimate the DiD
+		* 1: bid won
+			* large event window: 0 = 50, change at 50, window (0-100), N = 12,756 observations
+reg bid_won i.m2f i.nttt i.m2f#ib50.nttt `process_controls' `firm_controls' if inrange(nttt, 0, 100), vce(cluster cedula_proveedor)			
+			
+			* small event window: 0 = 50, change at 50; window (40-60), N = 5629 observations
+reg bid_won i.m2f i.nttt i.m2f#ib50.nttt `process_controls' `firm_controls' if inrange(nttt, 40, 60), vce(cluster cedula_proveedor)
+
+preserve 
+keep if nttt > 0
+logit bid_won i.m2f i.nttt i.m2f#ib50.nttt `process_controls' `firm_controls' if inrange(nttt, 40, 60), vce(cluster cedula_proveedor)
+restore
+
+
+		* 2: amount won
+			* large event window: 0 = 50, change at 50, window (0-100), N = 12,756 observations
+reg monto_crc_wlog i.m2f i.nttt i.m2f#ib50.nttt `process_controls' `firm_controls' if inrange(nttt, 0, 100), vce(cluster cedula_proveedor)			
+			
+			* small event window: 0 = 50, change at 50; window (40-60), N = 5629 observations
+reg monto_crc_wlog i.m2f i.nttt i.m2f#ib50.nttt `process_controls' `firm_controls' if inrange(nttt, 40, 60), vce(cluster cedula_proveedor)
+
+
+		* points won
+			* large event window: 0 = 50, change at 50, window (0-100), N = 12,756 observations
+reg total_points i.m2f i.nttt i.m2f#ib50.nttt `process_controls' `firm_controls' if inrange(nttt, 0, 100), vce(cluster cedula_proveedor)			
+			
+			* small event window: 0 = 50, change at 50; window (40-60), N = 5629 observations
+reg total_points i.m2f i.nttt i.m2f#ib50.nttt `process_controls' `firm_controls' if inrange(nttt, 40, 60), vce(cluster cedula_proveedor)
+
+
+***********************************************************************
+* 	PART : Event study/Dynamic DiD: interacted with PO gender
+***********************************************************************
+local process_controls "i.tipo_s i.year i.institucion_tipo"
+local firm_controls "i.firm_size c.age_adj i.firm_location c.cum_bids_won"
+
+		* 1: bid won
+			* large event window: 0 = 50, change at 50, window (0-100), N = 12,756 observations
+reg bid_won i.m2f##ib50.nttt##i.genderpo  `process_controls' `firm_controls' if inrange(nttt, 0, 100), vce(cluster cedula_proveedor)			
+			
+			* small event window: 0 = 50, change at 50; window (40-60), N = 5629 observations
+reg bid_won i.m2f##ib50.nttt##i.genderpo `process_controls' `firm_controls' if inrange(nttt, 40, 60), vce(cluster cedula_proveedor)
+
+
+		* 2: amount won
+			* large event window: 0 = 50, change at 50, window (0-100), N = 12,756 observations
+reg monto_crc_wlog i.m2f##ib50.nttt##i.genderpo `process_controls' `firm_controls' if inrange(nttt, 0, 100), vce(cluster cedula_proveedor)			
+			
+			* small event window: 0 = 50, change at 50; window (40-60), N = 5629 observations
+reg monto_crc_wlog i.m2f##ib50.nttt##i.genderpo `process_controls' `firm_controls' if inrange(nttt, 40, 60), vce(cluster cedula_proveedor)
+
+
+		* points won
+			* large event window: 0 = 50, change at 50, window (0-100), N = 12,756 observations
+reg total_points i.m2f##ib50.nttt##i.genderpo `process_controls' `firm_controls' if inrange(nttt, 0, 100), vce(cluster cedula_proveedor)			
+			
+			* small event window: 0 = 50, change at 50; window (40-60), N = 5629 observations
+reg total_points i.m2f##ib50.nttt##i.genderpo `process_controls' `firm_controls' if inrange(nttt, 40, 60), vce(cluster cedula_proveedor)
+
+***********************************************************************
+* 	PART : Triple DiD
+***********************************************************************
+		
+		
+***********************************************************************
+* 	PART 1: Event study DiD predicted probabilities of winning public contract
+***********************************************************************	
+	* define window size & shift factor
 foreach t of num 10 25 50 {
 gen nttt`t' = time_to_treat + `t'
 lab var nttt`t' "normalised time to treatment, +/- `t' window"

@@ -138,6 +138,7 @@ if (1) do "${ppg_github}/ppg_correct.do"
 ----------------------------------------------------------------------*/		
 if (1) do "${ppg_github}/ppg_generate.do"
 
+
 ***********************************************************************
 * 	PART 5: 	Collapse into different level data sets  	
 ***********************************************************************
@@ -160,6 +161,7 @@ if (1) do "${ppg_github}/ppg_collapse_process.do"
 ----------------------------------------------------------------------*/		
 if (1) do "${ppg_github}/ppg_collapse_firm_level.do"
 
+
 ***********************************************************************
 * 	PART 5: 	Run descriptive statistics do files		  	
 ***********************************************************************
@@ -174,6 +176,7 @@ if (1) do "${ppg_github}/ppg_descriptive_statistics.do"
 ----------------------------------------------------------------------*/
 if (1) do "${ppg_github}/ppg_firm_level_statistics.do"
 
+
 ***********************************************************************
 * 	PART 6: 	Multivariate Regression analysis		  	
 ***********************************************************************
@@ -182,6 +185,7 @@ if (1) do "${ppg_github}/ppg_firm_level_statistics.do"
 	Requires: sicop_replicable
 ----------------------------------------------------------------------*/
 if (0) do "${ppg_github}/ppg_multivariate_regression.do"
+
 
 ***********************************************************************
 * 	PART 7: Event study difference-in-difference (EDID)		  	
@@ -198,10 +202,15 @@ if (1) do "${ppg_github}/ppg_did_generate.do"
 ----------------------------------------------------------------------*/
 if (0) do "${ppg_github}/ppg_did_visualisations.do"
 /* --------------------------------------------------------------------
-	PART 7.3.: run EDID regressions
+	PART 7.3.: run Event study/ Dynamic DID regressions
 	Requires: sicop_process
 ----------------------------------------------------------------------*/
 if (0) do "${ppg_github}/ppg_did_regresssions.do"
+/* --------------------------------------------------------------------
+	PART 7.4.: run 2x2 and 2x3 DiD regressions (Y aggregated)
+	Requires: sicop_process
+----------------------------------------------------------------------*/
+if (0) do "${ppg_github}/ppg_did_2x3.do"
 
 
 /* --------------------------------------------------------------------
