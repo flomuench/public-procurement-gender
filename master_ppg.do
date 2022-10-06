@@ -95,12 +95,6 @@ global ppg_learning = "${ppg_regression_tables}/learning effects"
 global ppg_event = "${ppg_regression_tables}/event study did"
 global ppg_pooled = "${ppg_regression_tables}/pooled multivariate regression"
 global ppg_unconprob = "${ppg_regression_tables}/unconditional probabilities"
-
-
-		* globals for regression tables
-global process_controls "i.tipo ratio_firmpo_fm year i.institution_type number_competitors i.sector"
-global firm_controls "i.firm_size firm_age_ca i.firm_location" /*firm capital not used bc collinearity */
-		
 		
 
 ***********************************************************************

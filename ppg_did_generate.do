@@ -276,7 +276,7 @@ replace `value_before' = `treat_value_before2' if f2m == 1 | m2f == 1
 
 
 ***********************************************************************
-* 	PART 3:  Create a time to treat and normalised time to treat variable			
+* 	PART 11:  Create a time to treat and normalised time to treat variable			
 ***********************************************************************	
 	* generate time to treat variable
 gen time_to_treat = .
@@ -290,10 +290,10 @@ gen nttt`t' = time_to_treat + `t', a(time_to_treat)
 lab var nttt`t' "normalised time to treatment, +/- `t' window"
 }
 
-
+{
 
 ***********************************************************************
-* 	PART 3:  Create post variable			
+* 	PART 12:  Create post variable			
 ***********************************************************************	
 	* treatment group
 * idea: exploit the new m2f & f2m variables to create post variable for the treatment group
@@ -332,11 +332,52 @@ label def ab 1 "after" 0 "before"
 label values post* ab
 
 ***********************************************************************
-* 	Create cumulative experience variable in terms of bids won			
+* Part 13:	Create cumulative experience variable in terms of bids won			
 ***********************************************************************
 * alternative could also be cumulative amount won, however this would weigh big contracts strongly
 bysort cedula_proveedor (firm_occurence): gen cum_bids_won = sum(bid_won), a(bid_won)
 lab var cum_bids_won "cumulative bids won"
+}
+***********************************************************************
+* Part 14:	Create a placebo change among male-always & female_always firms
+***********************************************************************
+* decision: where to introduce the placebo change? 
+	* idea 1: introduce at median or mean nth bid
+		* after how many bids does the firm change representatives on average?
+			* change --> time_to_treat = 0
+			* nth bid --> firm_occurrence
+sum firm_occurence if time_to_treat == 0, d
+di "firms change representative on average after " `r(mean)' " bids, the median firm changes after " `r(p50)' " bids"
+		* problem: huge variation
+	
+	* idea 2: introduce at half of firm specific total bids
+bysort firm_id: gen total_bids = _N, a(firm_occurence)
+codebook total_bids if total_bids == 1 & female_always_same_person == 1 | male_always_same_person == 1
+			* 202 companies bid only once & were always represented by the same person
+egen half_occurence = median(firm_occurence), by(firm_id)
+order half_occurence, a(total_bids)
+replace half_occurence = round(half_occurence, 1)
+
+* create post variable
+bysort firm_id: replace post = (firm_occurence > half_occurence) if total_bids > 1 & female_always_same_person == 1
+bysort firm_id: replace post = (firm_occurence > half_occurence) if total_bids > 1 & male_always_same_person == 1
+		* before replacing: post had 10,675 pre and 19,596 post observations
+		* after 1st repplace: post has 24,391 pre and 31,491 post observations 
+		* after 2nd repplace: post has 63,934 pre and 65,146 post observations 
+
+
+* create time to treat variable
+	* think about it as firm_occurence centred at 
+bysort firm_id (firm_occurence): replace time_to_treat = firm_occurence - half_occurence if total_bids > 1 & female_always_same_person == 1
+bysort firm_id (firm_occurence): replace time_to_treat = firm_occurence - half_occurence if total_bids > 1 & male_always_same_person == 1
+
+
+* gen a treatment variable placebo D
+gen placeboD = 1 if female_always_same_person == 1 & time_to_treat != ., a(post)		// D = 1 for female2placebo
+replace placeboD = 0 if male_always_same_person == 1 & time_to_treat != .	// D = 0 for male2placebo
+
+lab var placeboD "placebo treatment"
+
 
 ***********************************************************************
 * 	Save new as sicop did 			
