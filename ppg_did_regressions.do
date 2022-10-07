@@ -16,12 +16,8 @@
 *	Requires: 	  	sicop_process.dta							  
 *	
 ***********************************************************************
-* 	PART START: 	Load, directory for export, declare panel		  			
+* 	PART 1: Load bid-unit panel data & make necessary adjustments	  			
 ***********************************************************************
-	* extend maximum variables and matsize to accomdate size of data
-set maxvar 32767
-set matsize 11000
-
 use "${ppg_final}/sicop_process", clear
 	
 	* set export folder for regression tables
@@ -46,9 +42,9 @@ gen nttt = time_to_treat + 50 if time_to_treat != .
 
 	* replace missing values for control variables
 nmissing tipo_s year institucion_tipo firm_size age firm_location cum_bids_won if m2f != .
-
-	* age missing for 265
-	* firm_location missing for 79
+		* age missing for 265
+		* firm_location missing for 79
+	* replace firm age with median age
 gen age_adj = age
 sum age if m2f != . | f2m != ., d
 replace age_adj = r(p50) if age == .
@@ -62,7 +58,7 @@ local firm_controls "i.firm_size c.age_adj i.firm_location c.cum_bids_won"
 	
 
 ***********************************************************************
-* 	PART 1: Event study/Dynamic DiD: 
+* 	PART 1.1: Event study/Dynamic DiD: 
 ***********************************************************************	
 	* m2f defined for 22,000 bids
 
@@ -97,10 +93,10 @@ reg total_points i.m2f i.nttt i.m2f#ib50.nttt `process_controls' `firm_controls'
 
 
 ***********************************************************************
-* 	PART : Event study/Dynamic DiD: interacted with PO gender
+* 	PART 1.2: Event study/Dynamic DiD: interacted with PO gender
 ***********************************************************************
 local process_controls "i.tipo_s i.year i.institucion_tipo"
-local firm_controls "i.firm_size c.age_adj i.firm_location c.cum_bids_won"
+local firm_controls "i.firm_size c.age_adj i.firm_location c.cum_bids_won i.missing_data"
 
 		* 1: bid won
 			* large event window: 0 = 50, change at 50, window (0-100), N = 12,756 observations
@@ -126,9 +122,79 @@ reg total_points i.m2f##ib50.nttt##i.genderpo `process_controls' `firm_controls'
 reg total_points i.m2f##ib50.nttt##i.genderpo `process_controls' `firm_controls' if inrange(nttt, 40, 60), vce(cluster cedula_proveedor)
 
 ***********************************************************************
-* 	PART : Triple DiD
+* 	PART 1.3: Triple DiD
 ***********************************************************************
 		
+
+
+		
+		
+		
+		
+***********************************************************************
+* 	PART 2: Load two-month panel data & make necessary adjustments	  			
+***********************************************************************		
+	* declare panel
+order firm_id two_month_to_treat
+xtset firm_id two_month_to_treat
+
+	
+	* define window size & shift factor
+/* notes: 
+	* problem: stata does not allow negative factors
+	* solution: shift time to treat variable by a certain factor to make it all positive
+	* shift factor should correspond to event window width, which needs to be determined arbitrarily
+*/
+
+	* define max. event window and shift factor
+gen nttt = time_to_treat + 50 if time_to_treat != .
+
+
+	* gen cumulative bids won prior to bid
+bysort firm_id (two_month_to_treat): gen cum_bids_won = sum(bids_won), a(bids_won)
+lab var cum_bids_won "cumulative bids won"
+
+
+	* define X control variables		
+local process_controls1 "i.process_type2 i.process_type3 i.process_type4 i.process_type5 i.process_type6" 
+local process_controls2 "i.year i.institution_type2 i.institution_type3 i.institution_type4 i.institution_type5"
+local firm_controls "i.firm_size c.age_adj i.firm_location c.cum_bids_won" // add i.missing_data	
+		
+***********************************************************************
+* 	PART 2.1: Event study/Dynamic DiD: 
+***********************************************************************	
+	* estimate the DiD
+		* 1: bid won
+			* large event window: 0 = 40, change at 41, window (34-46 = 1 year), N = ? observations
+reg bids_won i.m2f i.two_month_to_treat i.m2f#ib40.two_month_to_treat `firm_controls' if inrange(two_month_to_treat, 34, 46), vce(cluster firm_id)			
+			
+			* small event window: 0 = 50, change at 50; window (40-60), N = 5629 observations
+reg bids_won i.m2f i.two_month_to_treat i.m2f#ib50.two_month_to_treat `process_controls' `firm_controls' if inrange(two_month_to_treat, 40, 60), vce(cluster firm_id)
+
+preserve 
+keep if two_month_to_treat > 0
+logit bids_won i.m2f i.two_month_to_treat i.m2f#ib50.two_month_to_treat `process_controls' `firm_controls' if inrange(two_month_to_treat, 40, 60), vce(cluster firm_id)
+restore
+
+
+		* 2: amount won
+			* large event window: 0 = 50, change at 50, window (0-100), N = 12,756 observations
+reg monto_crc_wlog i.m2f i.two_month_to_treat i.m2f#ib50.two_month_to_treat `process_controls' `firm_controls' if inrange(two_month_to_treat, 0, 100), vce(cluster firm_id)			
+			
+			* small event window: 0 = 50, change at 50; window (40-60), N = 5629 observations
+reg monto_crc_wlog i.m2f i.two_month_to_treat i.m2f#ib50.two_month_to_treat `process_controls' `firm_controls' if inrange(two_month_to_treat, 40, 60), vce(cluster firm_id)
+
+
+		* points won
+			* large event window: 0 = 50, change at 50, window (0-100), N = 12,756 observations
+reg total_points i.m2f i.two_month_to_treat i.m2f#ib50.two_month_to_treat `process_controls' `firm_controls' if inrange(two_month_to_treat, 0, 100), vce(cluster firm_id)			
+			
+			* small event window: 0 = 50, change at 50; window (40-60), N = 5629 observations
+reg total_points i.m2f i.two_month_to_treat i.m2f#ib50.two_month_to_treat `process_controls' `firm_controls' if inrange(two_month_to_treat, 40, 60), vce(cluster firm_id)
+		
+		
+		
+* old code: 
 		
 ***********************************************************************
 * 	PART 1: Event study DiD predicted probabilities of winning public contract

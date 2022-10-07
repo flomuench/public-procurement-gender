@@ -41,10 +41,12 @@ by cedula_proveedor: gen firm_occurence = _n, a(cedula_proveedor)
 format %-5.0g firm_occurence
 
 
-	* create time difference between two contracts
-			* calculation/difference btw. two dates are calculates in miliseconds
-				* adding hours function provides diffence in hours rather than miliseconds
-				* dividing by 24 provides the difference in days
+***********************************************************************
+* 	PART 0:  create time difference between two contracts
+***********************************************************************	
+* calculation/difference btw. two dates are calculates in miliseconds
+		* adding hours function provides diffence in hours rather than miliseconds
+		* dividing by 24 provides the difference in days
 by cedula_proveedor: gen hours_dif = hours(date_publicacion - date_publicacion[_n-1]), a(date_publicacion)
 gen days_dif = hours_dif/24, a(date_publicacion)
 drop hours_dif
@@ -52,7 +54,7 @@ drop hours_dif
 	* how much time between publication and adjucation?
 gen days_pub_adj = clockdiff(date_publicacion, date_adjudicacion, "day"), a(date_adjudicacion)
 
-
+{
 ***********************************************************************
 * 	PART 1:  identify the different treatment groups 			
 ***********************************************************************	
@@ -251,9 +253,11 @@ egen control_value_before2  = max(control_value_before1), by(cedula_proveedor)
 order control_value_before*, a(firm_occurence)*/
 
 *browse if f2f == 1 | m2m == 1
+}
+
 
 ***********************************************************************
-* 	PART 10:  Create a time to treat variable for treatment group
+* 	PART 10:  Create a time to treat, bid-unit variable for treatment group
 ***********************************************************************	
 * idea: firm_occurence but centred at 0 (or -1) period before change
 	* 1: get the value one period before the change occurs:
@@ -274,10 +278,6 @@ replace `value_before' = `treat_value_before2' if f2m == 1 | m2f == 1
 			* post = 0: replace time_to_treat = value_before - firm_occurence
 	
 
-
-***********************************************************************
-* 	PART 11:  Create a time to treat and normalised time to treat variable			
-***********************************************************************	
 	* generate time to treat variable
 gen time_to_treat = .
 bysort cedula_proveedor (firm_occurence): replace time_to_treat = firm_occurence - `value_before'
@@ -290,10 +290,10 @@ gen nttt`t' = time_to_treat + `t', a(time_to_treat)
 lab var nttt`t' "normalised time to treatment, +/- `t' window"
 }
 
-{
+
 
 ***********************************************************************
-* 	PART 12:  Create post variable			
+* 	PART 11:  Create post variable			
 ***********************************************************************	
 	* treatment group
 * idea: exploit the new m2f & f2m variables to create post variable for the treatment group
@@ -337,7 +337,10 @@ label values post* ab
 * alternative could also be cumulative amount won, however this would weigh big contracts strongly
 bysort cedula_proveedor (firm_occurence): gen cum_bids_won = sum(bid_won), a(bid_won)
 lab var cum_bids_won "cumulative bids won"
-}
+
+
+
+
 ***********************************************************************
 * Part 14:	Create a placebo change among male-always & female_always firms
 ***********************************************************************
@@ -377,6 +380,70 @@ gen placeboD = 1 if female_always_same_person == 1 & time_to_treat != ., a(post)
 replace placeboD = 0 if male_always_same_person == 1 & time_to_treat != .	// D = 0 for male2placebo
 
 lab var placeboD "placebo treatment"
+
+
+***********************************************************************
+* 	PART 15:  Create a time to treat, calendar/month-unit variable for treatment group
+***********************************************************************	
+	* generate per company event reference date
+bysort cedula_proveedor (firm_occurence): gen event_date1 = date_publicacion if time_to_treat == 0, a(date_publicacion)
+egen event_date = min(event_date1), by(cedula_proveedor)
+drop event_date1
+format event_date %tc
+
+*bysort cedula_proveedor: replace event_date = event_date[_n-1] if missing(event_date) & _n > 1
+*bysort cedula_proveedor: replace event_date = event_date[_n+1] if missing(event_date) & _n > 1
+order date_publicacion event_date, a(post)
+
+	* convert from date-time (%tc) to date (%td)
+gen day_event = dofc(event_date), a(event_date)
+gen day_publication = dofc(date_publicacion), a(date_publicacion)
+format %td day_*
+
+	* calculate difference between event date and bid publication
+gen months_to_treat = datediff(day_event, day_publication, "month" ), a(day_publication)
+drop day_event day_publication
+
+	* collaspe by months_to_treat --> another do-file or in a different frame
+		* change frame
+frame copy default process_calendar, replace
+frame change process_calendar
+
+		* create a categorical variable based on months_to_treat that divides
+			* months_to_treat into two-month intervals (min = -80, max = 88)
+egen two_month_to_treat = cut(months_to_treat), at(-80(2)88) label icodes
+order two_month_to_treat, a(months_to_treat)
+
+		* adjust variables to be included as monthly controls
+			* gen a dummy for firm having missing values for control variables
+gen missing_data = (age == .) | (firm_location == 8)
+			* replace missing values for firm age with median
+gen age_adj = age
+sum age if m2f != . | f2m != ., d
+replace age_adj = r(p50) if age == .
+
+			* create dummies for type of process and type of contracting institution
+tab tipo_s, gen(process_type)
+tab institucion_tipo, gen(institution_type)
+			
+		* collapse
+local sumvars "bids_won=bid_won monto_usd_wlog total_points times_bid=one"
+local firstnmvars "post missing_data m2f f2m placeboD firm_international firm_size firm_location age_adj year"
+local countvar1 "process_type1 process_type2 process_type3 process_type4 process_type5 process_type6"
+local countvar2 "institution_type1 institution_type2 institution_type3 institution_type4 institution_type5"
+local byvars "firm_id two_month_to_treat"
+
+collapse (sum) `sumvars' (firstnm) `firstnmvars' (count) `countvar1' `countvar2', by(`byvars')
+
+		* save 
+save "${ppg_final}/sicop_twomonth", replace
+
+		
+		* return to initial frame
+*frame change default
+*frame drop process_calendar
+
+
 
 
 ***********************************************************************

@@ -78,10 +78,44 @@ min or quickest contract allocation happens in one days or even less, quickest 2
 */
 
 ***********************************************************************
-* 	PART 3:  visualise how many lags and leaps before treatment (change in reps gender)
+* 	PART 3: Days contract publication and contract allocation
 ***********************************************************************
-cd "$ppg_figures/"
-	
+sum months_to_treat if placeboD == ., d
+/*
+1st percentile = -53; 99th percentile = 68
+25% = - 4, 75thp  = 30
+mean = 11, median = 7
+
+*/
+
+		* every month
+twoway  ///
+	(histogram months_to_treat if months_to_treat >= -90 & months_to_treat <= 90 & m2f == 1, bin(90) frequency color(black%30)) ///
+	(histogram months_to_treat if months_to_treat > -90 & months_to_treat <= 90 & m2f == 0, bin(90) frequency color(gs10%30)), ///
+			xline(0) ///
+			legend(order(1 "Male to female" 2 "Male to male") pos(6) rows(1)) ///
+			xtitle("months to treatment") xlabel(#10) ///
+			ylabel(0(50)350) ytitle("number of observed bids") ///
+			xsize(2) ysize(1) ///
+			name(leads_lags_mtt_m2f, replace)
+graph export "$ppg_figures/leads_lags_mtt_m2f_month.png", replace
+
+
+		* two-month
+twoway  ///
+	(histogram months_to_treat if months_to_treat >= -90 & months_to_treat <= 90 & m2f == 1, bin(90) frequency color(black%30)) ///
+	(histogram months_to_treat if months_to_treat > -90 & months_to_treat <= 90 & m2f == 0, bin(90) frequency color(gs10%30)), ///
+			xline(0) ///
+			legend(order(1 "Male to female" 2 "Male to male") pos(6) rows(1)) ///
+			xtitle("months to treatment") xlabel(#10) ///
+			ylabel(0(50)350) ytitle("number of observed bids") ///
+			xsize(2) ysize(1) ///
+			name(leads_lags_mtt_m2f, replace)
+graph export "$ppg_figures/leads_lags_mtt_m2f_2month.png", replace
+
+***********************************************************************
+* 	PART 4:  visualise how many bid-lags and leaps before treatment (change in reps gender)
+***********************************************************************	
 	* average number of bids
 sum time_to_treat, d /* 12 */
 	

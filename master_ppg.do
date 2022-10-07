@@ -187,7 +187,7 @@ if (0) do "${ppg_github}/ppg_multivariate_regression.do"
 /* --------------------------------------------------------------------
 	PART 7.1.: generate EDID variables & identify "treatment" groups
 	Requires: sicop_process
-	Creates: sicop_process
+	Creates: sicop_process & sicop_twomonths
 ----------------------------------------------------------------------*/
 if (1) do "${ppg_github}/ppg_did_generate.do"
 /* --------------------------------------------------------------------
@@ -197,12 +197,12 @@ if (1) do "${ppg_github}/ppg_did_generate.do"
 if (0) do "${ppg_github}/ppg_did_visualisations.do"
 /* --------------------------------------------------------------------
 	PART 7.3.: run Event study/ Dynamic DID regressions
-	Requires: sicop_process
+	Requires: sicop_process & sicop_twomonths
 ----------------------------------------------------------------------*/
 if (0) do "${ppg_github}/ppg_did_regresssions.do"
 /* --------------------------------------------------------------------
 	PART 7.4.: run 2x2 and 2x3 DiD regressions (Y aggregated)
-	Requires: sicop_process
+	Requires: sicop_process & sicop_twomonths
 ----------------------------------------------------------------------*/
 if (0) do "${ppg_github}/ppg_did_2x3.do"
 

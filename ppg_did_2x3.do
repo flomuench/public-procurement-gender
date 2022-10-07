@@ -33,7 +33,7 @@ keep if inrange(time_to_treat, -20, 20)
 
 		* collapse
 local sumvars "bids_won=bid_won monto_usd_wlog total_points times_bid=one" // sum DV 
-local firstnmvars "m2f placeboD firm_international firm_size firm_location age"		// keep firm control variables
+local firstnmvars "m2f f2m placeboD firm_international firm_size firm_location age"		// keep firm control variables
 collapse (sum) `sumvars' (firstnm) `firstnmvars', by(cedula_proveedor post) // over firm and pre-post
 
 ***********************************************************************
